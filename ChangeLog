@@ -1,3 +1,7 @@
+2021-03-07  Tim-Philipp Müller  <tim@centricular.com>
+
+	* meson: add subproject fallbacks for libpng and zlib
+
 2021-03-07  Xavier Claessens  <xavier.claessens@collabora.com>
 
 	[meson] Make it work with Windows.
