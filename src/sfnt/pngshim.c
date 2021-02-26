@@ -252,7 +252,7 @@
                  png_voidp ptr )
   {
     FT_UNUSED( png );
-    return _aligned_free( ptr );
+    _aligned_free( ptr );
   }
 
 
