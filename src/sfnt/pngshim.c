@@ -270,7 +270,8 @@
 
     int         bitdepth, color_type, interlace;
     FT_Int      i;
-    png_byte*  *rows = NULL; /* pacify compiler */
+
+    png_byte* *volatile rows = NULL;
 
 
     if ( x_offset < 0 ||
