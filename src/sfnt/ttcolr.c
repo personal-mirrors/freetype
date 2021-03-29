@@ -320,14 +320,18 @@
 
 
   static FT_Bool
-  read_color_line( FT_Byte*      paint_base,
+  read_color_line( Colr*         colr,
+                   FT_Byte*      paint_base,
                    FT_ULong      colorline_offset,
                    FT_ColorLine  *colorline )
   {
     FT_Byte*        p = (FT_Byte *)( paint_base + colorline_offset );
     FT_PaintExtend  paint_extend;
-    /* TODO: Check pointer limits. */
 
+    if ( !colr || !colr->table ||
+         p < colr->base_glyphs_v1 ||
+         p >= colr->table + colr->table_size )
+      return 0;
 
     paint_extend = FT_NEXT_BYTE( p );
     if ( paint_extend > FT_COLR_PAINT_EXTEND_REFLECT )
@@ -412,7 +416,8 @@
       FT_ULong  color_line_offset = FT_NEXT_OFF3( p );
 
 
-      if ( !read_color_line( paint_base,
+      if ( !read_color_line( colr,
+                             paint_base,
                              color_line_offset,
                              &apaint->u.linear_gradient.colorline ) )
         return 0;
@@ -430,7 +435,8 @@
       FT_ULong  color_line_offset = color_line_offset = FT_NEXT_OFF3( p );
 
 
-      if ( !read_color_line( paint_base,
+      if ( !read_color_line( colr,
+                             paint_base,
                              color_line_offset,
                              &apaint->u.radial_gradient.colorline ) )
         return 0;
@@ -451,7 +457,8 @@
       FT_ULong  color_line_offset = color_line_offset = FT_NEXT_OFF3( p );
 
 
-      if ( !read_color_line( paint_base,
+      if ( !read_color_line( colr,
+                             paint_base,
                              color_line_offset,
                              &apaint->u.sweep_gradient.colorline ) )
         return 0;
