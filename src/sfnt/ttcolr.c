@@ -330,7 +330,7 @@
 
     if ( !colr || !colr->table ||
          p < colr->base_glyphs_v1 ||
-         p >= colr->table + colr->table_size )
+         p >= ( (FT_Byte*)colr->table + colr->table_size ) )
       return 0;
 
     paint_extend = FT_NEXT_BYTE( p );
