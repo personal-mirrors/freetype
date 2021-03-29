@@ -328,8 +328,8 @@
     FT_Byte*        p = (FT_Byte *)( paint_base + colorline_offset );
     FT_PaintExtend  paint_extend;
 
-    if ( !colr || !colr->table ||
-         p < colr->base_glyphs_v1 ||
+    /* colr and colr->table are checked in read_paint. */
+    if ( p < colr->base_glyphs_v1 ||
          p >= ( (FT_Byte*)colr->table + colr->table_size ) )
       return 0;
 
@@ -354,6 +354,8 @@
   {
     FT_Byte*  paint_base = p;
 
+    if ( !colr || !colr->table )
+      return 0;
 
     apaint->format = FT_NEXT_BYTE( p );
 
@@ -766,7 +768,7 @@
     FT_Byte*  p;
 
 
-    if ( !colr )
+    if ( !colr || !colr->table )
       return 0;
 
     if ( iterator->current_color_stop >= iterator->num_color_stops )
