@@ -347,12 +347,46 @@
   }
 
 
+  /*
+   * Reads a paint offset for FT_Paint* objects that have them and checks
+   * whether its within reasonable limits within the font and the COLR table.
+   *
+   * Returns 1 on success, 0 on failure.
+   */
+  static FT_Bool
+  get_paint_pointer ( Colr*      colr,
+                      FT_Byte*   paint_base,
+                      FT_Byte**  p,
+                      FT_Byte**  paint_pointer )
+  {
+    FT_UInt32  paint_offset;
+    FT_Byte*   paint_p;
+
+    if ( !paint_pointer )
+      return 0;
+
+    paint_offset = FT_NEXT_UOFF3( *p );
+    if ( !paint_offset )
+      return 0;
+
+    paint_p = (FT_Byte*)( paint_base + paint_offset );
+
+    if ( paint_p < colr->base_glyphs_v1 ||
+         paint_p >= ( (FT_Byte*)colr->table + colr->table_size ) )
+      return 0;
+
+    *paint_pointer = paint_p;
+    return 1;
+  }
+
+
   static FT_Bool
   read_paint( Colr*           colr,
               FT_Byte*        p,
               FT_COLR_Paint*  apaint )
   {
     FT_Byte*  paint_base = p;
+    FT_Byte*   paint_p = NULL;
 
     if ( !colr || !colr->table )
       return 0;
@@ -453,28 +487,22 @@
       apaint->u.sweep_gradient.end_angle = FT_NEXT_LONG( p );
     }
 
-    else if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
+    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
+      apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
+
+
+    if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
     {
-      FT_UInt32  paint_offset;
       FT_Byte*   paint_p;
 
 
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.glyph.paint.p                     = paint_p;
       apaint->u.glyph.paint.insert_root_transform = 0;
       apaint->u.glyph.glyphID                     = FT_NEXT_USHORT( p );
     }
-
-    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
-      apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
-
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSFORMED )
     {
