@@ -493,9 +493,6 @@
 
     if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
     {
-      FT_Byte*   paint_p;
-
-
       if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
          return 0;
 
@@ -506,17 +503,8 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSFORMED )
     {
-      FT_UInt32  paint_offset;
-      FT_Byte*   paint_p;
-
-
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.transformed.paint.p                     = paint_p;
       apaint->u.transformed.paint.insert_root_transform = 0;
@@ -531,17 +519,8 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSLATE )
     {
-      FT_UInt32  paint_offset;
-      FT_Byte*   paint_p;
-
-
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.translate.paint.p                     = paint_p;
       apaint->u.translate.paint.insert_root_transform = 0;
@@ -552,17 +531,8 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_ROTATE )
     {
-      FT_UInt32  paint_offset;
-      FT_Byte*   paint_p;
-
-
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.rotate.paint.p                     = paint_p;
       apaint->u.rotate.paint.insert_root_transform = 0;
@@ -575,17 +545,8 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_SKEW )
     {
-      FT_UInt32  paint_offset;
-      FT_Byte*   paint_p;
-
-
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.skew.paint.p                     = paint_p;
       apaint->u.skew.paint.insert_root_transform = 0;
@@ -599,25 +560,14 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_COMPOSITE )
     {
-      FT_UInt32  source_paint_offset;
-      FT_Byte*   source_paint_p;
-
-      FT_UInt32  backdrop_paint_offset;
-      FT_Byte*   backdrop_paint_p;
-
       FT_UInt    composite_mode;
 
 
-      source_paint_offset = FT_NEXT_UOFF3( p );
-      if ( !source_paint_offset )
-        return 0;
-
-      source_paint_p = (FT_Byte*)( paint_base + source_paint_offset );
-      if ( source_paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.composite.source_paint.p =
-        source_paint_p;
+        paint_p;
       apaint->u.composite.source_paint.insert_root_transform =
         0;
 
@@ -627,16 +577,11 @@
 
       apaint->u.composite.composite_mode = composite_mode;
 
-      backdrop_paint_offset = FT_NEXT_UOFF3( p );
-      if ( !backdrop_paint_offset )
-        return 0;
-
-      backdrop_paint_p = (FT_Byte*)( paint_base + backdrop_paint_offset );
-      if ( backdrop_paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
+      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
+         return 0;
 
       apaint->u.composite.backdrop_paint.p =
-        backdrop_paint_p;
+        paint_p;
       apaint->u.composite.backdrop_paint.insert_root_transform =
         0;
     }
