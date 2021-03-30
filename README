@@ -24,7 +24,7 @@ currently  the search  function  for  locally installed  documentation
 doesn't work due to cross-site scripting issues.]
 
 Additional documentation is  available as a separate  package from our
-sites.  Go to
+sites. Refer:
 
   https://download.savannah.gnu.org/releases/freetype/
 
@@ -50,11 +50,11 @@ e-mail lists.
   announcements:                   freetype-announce@nongnu.org
   git repository tracker:          freetype-commit@nongnu.org
 
-The lists are moderated; see
+The lists are moderated. For more information, refer:
 
   https://www.freetype.org/contact.html
 
-how to subscribe.
+for how to subscribe.
 
 
 Bugs
