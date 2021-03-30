@@ -388,25 +388,6 @@
       return 1;
     }
 
-    if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
-    {
-      FT_UInt32  paint_offset;
-      FT_Byte*   paint_p;
-
-
-      paint_offset = FT_NEXT_UOFF3( p );
-      if ( !paint_offset )
-        return 0;
-
-      paint_p = (FT_Byte*)( paint_base + paint_offset );
-      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
-        return 0;
-
-      apaint->u.glyph.paint.p                     = paint_p;
-      apaint->u.glyph.paint.insert_root_transform = 0;
-      apaint->u.glyph.glyphID                     = FT_NEXT_USHORT( p );
-    }
-
     else if ( apaint->format == FT_COLR_PAINTFORMAT_SOLID )
     {
       apaint->u.solid.color.palette_index = FT_NEXT_USHORT ( p );
@@ -471,6 +452,29 @@
       apaint->u.sweep_gradient.start_angle = FT_NEXT_LONG( p );
       apaint->u.sweep_gradient.end_angle = FT_NEXT_LONG( p );
     }
+
+    else if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
+    {
+      FT_UInt32  paint_offset;
+      FT_Byte*   paint_p;
+
+
+      paint_offset = FT_NEXT_UOFF3( p );
+      if ( !paint_offset )
+        return 0;
+
+      paint_p = (FT_Byte*)( paint_base + paint_offset );
+      if ( paint_p > ( (FT_Byte*)colr->table + colr->table_size ) )
+        return 0;
+
+      apaint->u.glyph.paint.p                     = paint_p;
+      apaint->u.glyph.paint.insert_root_transform = 0;
+      apaint->u.glyph.glyphID                     = FT_NEXT_USHORT( p );
+    }
+
+    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
+      apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
+
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSFORMED )
     {
@@ -608,9 +612,6 @@
       apaint->u.composite.backdrop_paint.insert_root_transform =
         0;
     }
-
-    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
-      apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
 
     return 1;
   }
