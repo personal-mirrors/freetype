@@ -433,8 +433,9 @@
 
     /*
      * Grouped below here are all paint formats that have an offset to a child
-     * paint table as the first entry. Retrieve that and determine whether that
-     * paint offset is valid first.
+     * paint table as the first entry (for example a color line or a child paint
+     * table). Retrieve that and determine whether that paint offset is valid
+     * first.
      */
 
     if ( !get_child_table_pointer( colr, paint_base, &p, &child_table_p ) )
