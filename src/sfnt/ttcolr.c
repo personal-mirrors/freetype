@@ -385,10 +385,10 @@
               FT_Byte*        p,
               FT_COLR_Paint*  apaint )
   {
-    FT_Byte*  paint_base = p;
-    FT_Byte*   paint_p = NULL;
+    FT_Byte*  paint_base  = p;
+    FT_Byte*  paint_p     = NULL;
 
-    if ( !colr || !colr->table )
+    if ( !p || !colr || !colr->table )
       return 0;
 
     apaint->format = FT_NEXT_BYTE( p );
@@ -426,6 +426,8 @@
     {
       apaint->u.solid.color.palette_index = FT_NEXT_USHORT ( p );
       apaint->u.solid.color.alpha         = FT_NEXT_USHORT ( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_LINEAR_GRADIENT )
@@ -445,6 +447,8 @@
       apaint->u.linear_gradient.p1.y = FT_NEXT_SHORT ( p );
       apaint->u.linear_gradient.p2.x = FT_NEXT_SHORT ( p );
       apaint->u.linear_gradient.p2.y = FT_NEXT_SHORT ( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_RADIAL_GRADIENT )
@@ -467,6 +471,8 @@
       apaint->u.radial_gradient.c1.y = FT_NEXT_SHORT ( p );
 
       apaint->u.radial_gradient.r1 = FT_NEXT_USHORT ( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_SWEEP_GRADIENT )
@@ -485,20 +491,24 @@
 
       apaint->u.sweep_gradient.start_angle = FT_NEXT_LONG( p );
       apaint->u.sweep_gradient.end_angle = FT_NEXT_LONG( p );
+
+      return 1;
     }
 
-    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
+    else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH ) {
       apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
+
+      return 1;
+    }
 
 
     if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
     {
-      if ( !get_paint_pointer( colr, paint_base, &p, &paint_p ) )
-         return 0;
-
       apaint->u.glyph.paint.p                     = paint_p;
       apaint->u.glyph.paint.insert_root_transform = 0;
       apaint->u.glyph.glyphID                     = FT_NEXT_USHORT( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSFORMED )
@@ -515,6 +525,8 @@
       apaint->u.transformed.affine.yy = FT_NEXT_LONG( p );
       apaint->u.transformed.affine.dx = FT_NEXT_LONG( p );
       apaint->u.transformed.affine.dy = FT_NEXT_LONG( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_TRANSLATE )
@@ -527,6 +539,8 @@
 
       apaint->u.translate.dx = FT_NEXT_LONG( p );
       apaint->u.translate.dy = FT_NEXT_LONG( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_ROTATE )
@@ -541,6 +555,8 @@
 
       apaint->u.rotate.center_x = FT_NEXT_LONG( p );
       apaint->u.rotate.center_y = FT_NEXT_LONG( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_SKEW )
@@ -556,6 +572,8 @@
 
       apaint->u.skew.center_x = FT_NEXT_LONG( p );
       apaint->u.skew.center_y = FT_NEXT_LONG( p );
+
+      return 1;
     }
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_COMPOSITE )
@@ -584,9 +602,11 @@
         paint_p;
       apaint->u.composite.backdrop_paint.insert_root_transform =
         0;
+
+      return 1;
     }
 
-    return 1;
+    return 0;
   }
 
 
