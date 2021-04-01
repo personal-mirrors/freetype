@@ -2,8 +2,8 @@
 
 	[sfnt] Check validity of pointer location of read_color_line
 
-	* sfnt/ttcolr.c (read_color_line, read_paint)
-	(get_child_table_pointer): Fetch child table pointer early for all
+	* sfnt/ttcolr.c (read_color_line, read_paint,
+	get_child_table_pointer): Fetch child table pointer early for all
 	paint formats that compute a child table pointer, refactor checks
 	into get_child_pointer function.
 

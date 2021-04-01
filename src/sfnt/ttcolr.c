@@ -343,7 +343,7 @@
 
   /*
    * Reads a paint offset for FT_Paint* objects that have them and checks
-   * whether its within reasonable limits within the font and the COLR table.
+   * whether it is within reasonable limits within the font and the COLR table.
    *
    * Returns 1 on success, 0 on failure.
    */
