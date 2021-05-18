@@ -1,3 +1,9 @@
+2021-06-25  Anurag Thakur  <anuthadev@gmail.com>
+
+	[CI] Introduce linux CI and refactor job names
+
+	* .gitlab-ci.yml: Added jobs for building freetype on linux.
+
 2021-06-25  Werner Lemberg  <wl@gnu.org>
 
 	[base] Add trace level to logging output.
