@@ -1,3 +1,42 @@
+2021-07-12  David Turner  <david@freetype.org>
+
+	Remove obsolete AF_Angle type and related sources.
+
+	Move the af_sort_xxx() functions from afangles.c to afhints.c in
+	order to get rid of the obsolete angle-related types, macros and
+	function definitions.
+
+	* src/autofit/*: Remove code.
+
+2021-07-12  David Turner  <david@freetype.org>
+
+	Remove experimental auto-hinting 'warp' mode.
+
+	This feature was always experimental, and probably nevery worked
+	properly. This patch completely removes it from the source code,
+	except for a documentation block describing it for historical
+	purpose.
+
+	* devel/ftoption.h: Remove AF_CONFIG_OPTION_USE_WARPER.
+	* include/freetype/config/ftoption.h: Remove AF_CONFIG_OPTION_USE_WARPER.
+	* include/freetype/ftdriver.h: Document 'warping' property as obsolete.
+	* src/autofit/*: Remove any warp mode related code.
+
+2021-07-12  David Turner  <david@freetype.org>
+
+	Remove experimental "Latin2" writing system (FT_OPTION_AUTOFIT2)
+
+	This code has always been experimental and was never compiled anyway
+	(FT_OPTION_AUTOFIT2 does not appear in ftoption.h or even any of our
+	build files).
+
+	* include/freetype/internal/fttrace.h: Remove 'FT_TRACE_DEF( aflatin2 )'.
+	* src/autofit/aflatin2.[hc]: Removed.
+	* src/autofit/afloader.c: Remove undocumented hook to activate Latin2 system.
+	* src/autofit/afstyles.h: Remove ltn2_dflt style definition.
+	* src/autofit/afwrtsys.h: Remove LATIN2 writing system definition.
+	* src/autofit/autofit.c: Updated.
+
 2021-07-05  Werner Lemberg  <wl@gnu.org>
 
 	* src/base/ftlcdfil.c (FT_Library_SetLcdGeometry): Fix argument.
