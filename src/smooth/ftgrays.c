@@ -479,19 +479,24 @@ typedef ptrdiff_t  FT_PtrDist;
   {
     ft_jmp_buf  jump_buffer;
 
-    TCoord  min_ex, max_ex;
+    TCoord  min_ex, max_ex;  /* min and max integer pixel coordinates */
     TCoord  min_ey, max_ey;
+    TCoord  count_ey;        /* same as (max_ey - min_ey) */
 
-    PCell       cell;
-    PCell*      ycells;
-    PCell       cells;
-    FT_PtrDist  max_cells;
-    FT_PtrDist  num_cells;
+    PCell       cell;        /* current cell                             */
+    PCell       cell_free;   /* call allocation next free slot           */
+    PCell       cell_limit;  /* cell allocation limit                    */
 
-    TPos    x,  y;
+    PCell*      ycells;      /* array of cell linked-lists, one per      */
+							 /* vertical coordinate in the current band. */
 
-    FT_Outline  outline;
-    TPixmap     target;
+    PCell       cells;       /* cell storage area     */
+    FT_PtrDist  max_cells;   /* cell storage capacity */
+
+    TPos        x,  y;       /* last point position */
+
+    FT_Outline  outline;     /* input outline */
+    TPixmap     target;      /* target pixmap */
 
     FT_Raster_Span_Func  render_span;
     void*                render_span_data;
@@ -502,21 +507,34 @@ typedef ptrdiff_t  FT_PtrDist;
 #pragma warning( pop )
 #endif
 
-
 #ifndef FT_STATIC_RASTER
 #define ras  (*worker)
 #else
   static gray_TWorker  ras;
 #endif
 
-#define FT_INTEGRATE( ras, a, b )                                       \
-           if ( ras.cell )                                              \
-             ras.cell->cover += (a), ras.cell->area += (a) * (TArea)(b)
+/* Return a pointer to the "null cell", used as a sentinel at the end   */
+/* of all ycells[] linked lists. Its x coordinate should be maximal     */
+/* to ensure no NULL checks are necessary when looking for an insertion */
+/* point in gray_set_cell(). Other loops should check the cell pointer  */
+/* with CELL_IS_NULL() to detect the end of the list.                   */
+#define NULL_CELL_PTR(ras)  (ras).cells
+
+/* The |x| value of the null cell. Must be the largest possible */
+/* integer value stored in a TCell.x field.                     */
+#define CELL_MAX_X_VALUE    INT_MAX
+
+/* Return true iff |cell| points to the null cell. */
+#define CELL_IS_NULL(cell)  ((cell)->x == CELL_MAX_X_VALUE)
+
+
+#define FT_INTEGRATE( ras, a, b )                                     \
+           ras.cell->cover += (a), ras.cell->area += (a) * (TArea)(b)
 
 
   typedef struct gray_TRaster_
   {
-    void*         memory;
+    void*  memory;
 
   } gray_TRaster, *gray_PRaster;
 
@@ -538,7 +556,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
       printf( "%3d:", y );
 
-      for ( ; cell != NULL; cell = cell->next )
+      for ( ; !CELL_IS_NULL(cell); cell = cell->next )
         printf( " (%3d, c:%4d, a:%6d)",
                 cell->x, cell->cover, cell->area );
       printf( "\n" );
@@ -566,11 +584,12 @@ typedef ptrdiff_t  FT_PtrDist;
     /* Note that if a cell is to the left of the clipping region, it is    */
     /* actually set to the (min_ex-1) horizontal position.                 */
 
-    if ( ey >= ras.max_ey || ey < ras.min_ey || ex >= ras.max_ex )
-      ras.cell = NULL;
+    TCoord ey_index = ey - ras.min_ey;
+    if ( ey_index < 0 || ey_index >= ras.count_ey || ex >= ras.max_ex )
+      ras.cell = NULL_CELL_PTR(ras);
     else
     {
-      PCell*  pcell = ras.ycells + ey - ras.min_ey;
+      PCell*  pcell = ras.ycells + ey_index;
       PCell   cell;
 
 
@@ -580,7 +599,7 @@ typedef ptrdiff_t  FT_PtrDist;
       {
         cell = *pcell;
 
-        if ( !cell || cell->x > ex )
+        if ( cell->x > ex )
           break;
 
         if ( cell->x == ex )
@@ -589,11 +608,11 @@ typedef ptrdiff_t  FT_PtrDist;
         pcell = &cell->next;
       }
 
-      if ( ras.num_cells >= ras.max_cells )
+      /* insert new cell */
+      cell = ras.cell_free++;
+      if (cell >= ras.cell_limit)
         ft_longjmp( ras.jump_buffer, 1 );
 
-      /* insert new cell */
-      cell        = ras.cells + ras.num_cells++;
       cell->x     = ex;
       cell->area  = 0;
       cell->cover = 0;
@@ -974,6 +993,188 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #endif
 
+/* Benchmarking shows that using DDA to flatten the quadratic bezier
+ * arcs is slightly faster in the following cases:
+ *
+ *   - When the host CPU is 64-bit.
+ *   - When SSE2 SIMD registers and instructions are available (even on x86).
+ *
+ * For other cases, using binary splits is actually slightly faster.
+ */
+#if defined(__SSE2__) || defined(__x86_64__) || defined(__aarch64__) || defined(_M_AMD64) || defined(_M_ARM64)
+#define BEZIER_USE_DDA  1
+#else
+#define BEZIER_USE_DDA  0
+#endif
+
+#if BEZIER_USE_DDA
+
+#include <emmintrin.h>
+
+  static void
+  gray_render_conic( RAS_ARG_ const FT_Vector*  control,
+                              const FT_Vector*  to )
+  {
+    FT_Vector  p0, p1, p2;
+
+    p0.x = ras.x;
+    p0.y = ras.y;
+    p1.x = UPSCALE( control->x );
+    p1.y = UPSCALE( control->y );
+    p2.x = UPSCALE( to->x );
+    p2.y = UPSCALE( to->y );
+
+    /* short-cut the arc that crosses the current band */
+    if ( ( TRUNC( p0.y ) >= ras.max_ey &&
+           TRUNC( p1.y ) >= ras.max_ey &&
+           TRUNC( p2.y ) >= ras.max_ey ) ||
+         ( TRUNC( p0.y ) <  ras.min_ey &&
+           TRUNC( p1.y ) <  ras.min_ey &&
+           TRUNC( p2.y ) <  ras.min_ey ) )
+    {
+      ras.x = p2.x;
+      ras.y = p2.y;
+      return;
+    }
+
+    TPos dx = FT_ABS( p0.x + p2.x - 2 * p1.x );
+    TPos dy = FT_ABS( p0.y + p2.y - 2 * p1.y );
+    if ( dx < dy )
+      dx = dy;
+
+    if ( dx <= ONE_PIXEL / 4 )
+    {
+      gray_render_line( RAS_VAR_ p2.x, p2.y );
+      return;
+    }
+
+    /* We can calculate the number of necessary bisections because  */
+    /* each bisection predictably reduces deviation exactly 4-fold. */
+    /* Even 32-bit deviation would vanish after 16 bisections.      */
+    int shift = 0;
+    do
+    {
+      dx   >>= 2;
+      shift += 1;
+    }
+    while (dx > ONE_PIXEL / 4);
+
+    /*
+     * The (P0,P1,P2) arc equation, for t in [0,1] range:
+     *
+     * P(t) = P0*(1-t)^2 + P1*2*t*(1-t) + P2*t^2
+     *
+     * P(t) = P0 + 2*(P1-P0)*t + (P0+P2-2*P1)*t^2
+     *      = P0 + 2*B*t + A*t^2
+     *
+     *    for A = P0 + P2 - 2*P1
+     *    and B = P1 - P0
+     *
+     * Let's consider the difference when advancing by a small
+     * parameter h:
+     *
+     *    Q(h,t) = P(t+h) - P(t) = 2*B*h + A*h^2 + 2*A*h*t
+     *
+     * And then its own difference:
+     *
+     *    R(h,t) = Q(h,t+h) - Q(h,t) = 2*A*h*h = R (constant)
+     *
+     * Since R is always a constant, it is possible to compute
+     * successive positions with:
+     *
+     *     P = P0
+     *     Q = Q(h,0) = 2*B*h + A*h*h
+     *     R = 2*A*h*h
+     *
+     *   loop:
+     *     P += Q
+     *     Q += R
+     *     EMIT(P)
+     *
+     * To ensure accurate results, perform computations on 64-bit
+     * values, after scaling them by 2^32:
+     *
+     *     R << 32   = 2 * A << (32 - N - N)
+     *               = A << (33 - 2 *N)
+     *
+     *     Q << 32   = (2 * B << (32 - N)) + (A << (32 - N - N))
+     *               = (B << (33 - N)) + (A << (32 - N - N))
+     */
+#ifdef __SSE2__
+    /* Experience shows that for small shift values, SSE2 is actually slower. */
+    if (shift > 2) {
+      union {
+        struct { FT_Int64 ax, ay, bx, by; } i;
+        struct { __m128i a, b; } vec;
+      } u;
+
+      u.i.ax = p0.x + p2.x - 2 * p1.x;
+      u.i.ay = p0.y + p2.y - 2 * p1.y;
+      u.i.bx = p1.x - p0.x;
+      u.i.by = p1.y - p0.y;
+
+      __m128i a = _mm_load_si128(&u.vec.a);
+      __m128i b = _mm_load_si128(&u.vec.b);
+
+      __m128i r = _mm_slli_epi64(a, 33 - 2 * shift);
+      __m128i q = _mm_slli_epi64(b, 33 - shift);
+      __m128i q2 = _mm_slli_epi64(a, 32 - 2 * shift);
+      q = _mm_add_epi64(q2, q);
+
+      union {
+        struct { FT_Int32  px_lo, px_hi, py_lo, py_hi; } i;
+        __m128i vec;
+      } v;
+      v.i.px_lo = 0;
+      v.i.px_hi = p0.x;
+      v.i.py_lo = 0;
+      v.i.py_hi = p0.y;
+
+      __m128i p = _mm_load_si128(&v.vec);
+
+      for (unsigned count = (1u << shift); count > 0; count--) {
+        p = _mm_add_epi64(p, q);
+        q = _mm_add_epi64(q, r);
+
+        _mm_store_si128(&v.vec, p);
+
+        gray_render_line( RAS_VAR_ v.i.px_hi, v.i.py_hi);
+      }
+      return;
+    }
+#endif  /* !__SSE2__ */
+    FT_Int64 ax = p0.x + p2.x - 2 * p1.x;
+    FT_Int64 ay = p0.y + p2.y - 2 * p1.y;
+    FT_Int64 bx = p1.x - p0.x;
+    FT_Int64 by = p1.y - p0.y;
+
+    FT_Int64 rx = ax << (33 - 2 * shift);
+    FT_Int64 ry = ay << (33 - 2 * shift);
+
+    FT_Int64 qx = (bx << (33 - shift)) + (ax << (32 - 2 * shift));
+    FT_Int64 qy = (by << (33 - shift)) + (ay << (32 - 2 * shift));
+
+    FT_Int64 px = (FT_Int64)p0.x << 32;
+    FT_Int64 py = (FT_Int64)p0.y << 32;
+
+	FT_UInt count = 1u << shift;
+
+    for (; count > 0; count--) {
+      px += qx;
+      py += qy;
+      qx += rx;
+      qy += ry;
+
+      gray_render_line( RAS_VAR_ (FT_Pos)(px >> 32), (FT_Pos)(py >> 32));
+    }
+  }
+
+#else  /* !BEZIER_USE_DDA */
+
+  /* Note that multiple attempts to speed up the function below
+   * with SSE2 intrinsics, using various data layouts, have turned
+   * out to be slower than the non-SIMD code below.
+   */
   static void
   gray_split_conic( FT_Vector*  base )
   {
@@ -1059,7 +1260,15 @@ typedef ptrdiff_t  FT_PtrDist;
     } while ( --draw );
   }
 
+#endif  /* !BEZIER_USE_DDA */
 
+  /* For cubic bezier, binary splits are still faster than DDA
+   * because the splits are adaptive to how quickly each sub-arc
+   * approaches their chord trisection points.
+   *
+   * It might be useful to experiment with SSE2 to speed up
+   * gray_split_cubic() though.
+   */
   static void
   gray_split_cubic( FT_Vector*  base )
   {
@@ -1150,7 +1359,6 @@ typedef ptrdiff_t  FT_PtrDist;
     }
   }
 
-
   static int
   gray_move_to( const FT_Vector*  to,
                 gray_PWorker      worker )
@@ -1218,7 +1426,7 @@ typedef ptrdiff_t  FT_PtrDist;
       unsigned char*  line = ras.target.origin - ras.target.pitch * y;
 
 
-      for ( ; cell != NULL; cell = cell->next )
+      for ( ; !CELL_IS_NULL(cell); cell = cell->next )
       {
         if ( cover != 0 && cell->x > x )
         {
@@ -1266,7 +1474,7 @@ typedef ptrdiff_t  FT_PtrDist;
       TArea   area;
 
 
-      for ( ; cell != NULL; cell = cell->next )
+      for ( ; !CELL_IS_NULL(cell); cell = cell->next )
       {
         if ( cover != 0 && cell->x > x )
         {
@@ -1646,8 +1854,8 @@ typedef ptrdiff_t  FT_PtrDist;
       FT_TRACE7(( "band [%d..%d]: %ld cell%s\n",
                   ras.min_ey,
                   ras.max_ey,
-                  ras.num_cells,
-                  ras.num_cells == 1 ? "" : "s" ));
+                  ras.cell_free - ras.cells.,
+                  ras.cell_free - ras.cells == 1 ? "" : "s" ));
     }
     else
     {
@@ -1690,7 +1898,17 @@ typedef ptrdiff_t  FT_PtrDist;
 
     ras.cells     = buffer + n;
     ras.max_cells = (FT_PtrDist)( FT_MAX_GRAY_POOL - n );
+    ras.cell_limit = ras.cells + ras.max_cells;
     ras.ycells    = (PCell*)buffer;
+
+	/* Initialize the null cell is at the start of the 'cells' array. */
+	/* Note that this requires ras.cell_free initialization to skip   */
+	/* over the first entry in the array.                             */
+	PCell null_cell  = NULL_CELL_PTR(ras);
+	null_cell->x     = CELL_MAX_X_VALUE;
+	null_cell->area  = 0;
+	null_cell->cover = 0;
+	null_cell->next  = NULL;;
 
     for ( y = yMin; y < yMax; )
     {
@@ -1705,15 +1923,17 @@ typedef ptrdiff_t  FT_PtrDist;
       do
       {
         TCoord  width = band[0] - band[1];
+        TCoord  w;
         int     error;
 
+        for (w = 0; w < width; ++w)
+          ras.ycells[w] = null_cell;
 
-        FT_MEM_ZERO( ras.ycells, height * sizeof ( PCell ) );
-
-        ras.num_cells = 0;
-        ras.cell      = NULL;
+        ras.cell_free = ras.cells + 1;  /* NOTE: Skip over the null cell. */
+        ras.cell      = null_cell;
         ras.min_ey    = band[1];
         ras.max_ey    = band[0];
+        ras.count_ey  = width;
 
         error     = gray_convert_glyph_inner( RAS_VAR, continued );
         continued = 1;
