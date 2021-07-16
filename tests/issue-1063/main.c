@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 
 #include <freetype/freetype.h>
@@ -9,8 +10,15 @@ main( void )
   FT_Library library;
   FT_Face    face = NULL;
 
-  /* Assumes this is run from out/ build directory though 'meson test -C out' */
-  const char* filepath = "../tests/data/As.I.Lay.Dying.ttf";
+  /* Assumes that FREETYPE_TESTS_DATA_DIR was set by 'meson test'. If not we
+   * default to ../tests/data.
+   * TODO(david): Rewrite this to pass the test directory through the
+   * command-line. */
+  const char* testdata_dir = getenv( "FREETYPE_TESTS_DATA_DIR" );
+  char        filepath[PATH_MAX];
+  snprintf( filepath, sizeof( filepath ), "%s/%s",
+            testdata_dir ? testdata_dir : "../tests/data",
+            "As.I.Lay.Dying.ttf" );
 
   FT_Init_FreeType( &library );
   if ( FT_New_Face( library, filepath, 0, &face ) != 0 )
