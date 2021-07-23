@@ -48,7 +48,8 @@ AUTOF_DRV_H := $(AUTOF_DRV_SRC:%c=%h)  \
                $(AUTOF_DIR)/afscript.h \
                $(AUTOF_DIR)/afstyles.h \
                $(AUTOF_DIR)/aftypes.h  \
-               $(AUTOF_DIR)/afwrtsys.h
+               $(AUTOF_DIR)/afws_dec.h \
+               $(AUTOF_DIR)/afws_itr.h
 
 
 # AUTOF driver object(s)
