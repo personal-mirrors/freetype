@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * afwrtsys.h
+ * afws_itr.h
  *
  *   Auto-fitter writing systems (specification only).
  *
@@ -15,23 +15,8 @@
  *
  */
 
-
-#ifndef AFWRTSYS_H_
-#define AFWRTSYS_H_
-
-  /* Since preprocessor directives can't create other preprocessor */
-  /* directives, we have to include the header files manually.     */
-
-#include "afdummy.h"
-#include "aflatin.h"
-#include "afcjk.h"
-#include "afindic.h"
-
-#endif /* AFWRTSYS_H_ */
-
-
-  /* The following part can be included multiple times. */
-  /* Define `WRITING_SYSTEM' as needed.                 */
+  /* This header may be included multiple times. */
+  /* Define `WRITING_SYSTEM' as needed.          */
 
 
   /* Add new writing systems here.  The arguments are the writing system */
