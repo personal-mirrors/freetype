@@ -68,26 +68,30 @@
 # . `CMakeLists.txt' is provided as-is since it is normally not used by the
 #   developer team.
 #
-# . Set the `FT_WITH_ZLIB', `FT_WITH_BZIP2', `FT_WITH_PNG',
-#   `FT_WITH_HARFBUZZ', and `FT_WITH_BROTLI' CMake variables to `ON' to
+# . Set the `FT_REQUIRE_ZLIB', `FT_REQUIRE_BZIP2', `FT_REQUIRE_PNG',
+#   `FT_REQUIRE_HARFBUZZ', and `FT_REQUIRE_BROTLI' CMake variables to `ON' or `TRUE' to
 #   force using a dependency.  Leave a variable undefined (which is the
 #   default) to use the dependency only if it is available. Example:
 #
-#     cmake -B build -D FT_WITH_ZLIB=ON \
-#                    -D FT_WITH_BZIP2=ON \
-#                    -D FT_WITH_PNG=ON \
-#                    -D FT_WITH_HARFBUZZ=ON \
-#                    -D FT_WITH_BROTLI=ON [...]
+#     cmake -B build -D FT_REQUIRE_ZLIB=TRUE \
+#                    -D FT_REQUIRE_BZIP2=TRUE \
+#                    -D FT_REQUIRE_PNG=TRUE \
+#                    -D FT_REQUIRE_HARFBUZZ=TRUE \
+#                    -D FT_REQUIRE_BROTLI=TRUE [...]
 #
-#   Set `CMAKE_DISABLE_FIND_PACKAGE_XXX=TRUE' to disable a dependency completely
+# . Set `FT_DISABLE_XXX=TRUE' to disable a dependency completely
 #   (where `XXX' is a CMake package name like `BZip2').  Example for disabling all
 #   dependencies:
 #
-#     cmake -B build -D CMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE [...]
+#     cmake -B build -D FT_DISABLE_ZLIB=TRUE \
+#                    -D FT_DISABLE_BZIP2=TRUE \
+#                    -D FT_DISABLE_PNG=TRUE \
+#                    -D FT_DISABLE_HARFBUZZ=TRUE \
+#                    -D FT_DISABLE_BROTLI=TRUE [...]
+#
+# . NOTE: If a package is set as DISABLED, it cannot be set as REQUIRED without unsetting the DISABLED value first.
+#   e.g. If the `FT_DISABLE_HARFBUZZ=TRUE' has been set (Cache is present), you need to call `FT_DISABLE_HARFBUZZ=FALSE'
+#   before calling `FT_REQUIRE_HARFBUZZ=TRUE' for it to work.
 #
 # . Installation of FreeType can be controlled with the CMake variables
 #   `SKIP_INSTALL_HEADERS', `SKIP_INSTALL_LIBRARIES', and `SKIP_INSTALL_ALL'
@@ -109,6 +113,7 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.3)
 endif ()
 
 include(CheckIncludeFile)
+include(CMakeDependentOption)
 
 # CMAKE_TOOLCHAIN_FILE must be set before `project' is called, which
 # configures the base build environment and references the toolchain file
@@ -173,11 +178,20 @@ set(LIBRARY_VERSION "${LIBRARY_SOVERSION}.${LIBTOOL_AGE}.${LIBTOOL_REVISION}")
 
 # External dependency library detection is automatic. See the notes at the top
 # of this file, for how to force or disable dependencies completely.
-option(FT_WITH_ZLIB "Use system zlib instead of internal library." OFF)
-option(FT_WITH_BZIP2 "Support bzip2 compressed fonts." OFF)
-option(FT_WITH_PNG "Support PNG compressed OpenType embedded bitmaps." OFF)
-option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
-option(FT_WITH_BROTLI "Support compressed WOFF2 fonts." OFF)
+option(FT_DISABLE_ZLIB "Disable use of system zlib instead of internal library." OFF)
+cmake_dependent_option(FT_REQUIRE_ZLIB "Require system zlib instead of internal library." OFF "NOT FT_DISABLE_ZLIB" OFF)
+
+option(FT_DISABLE_BZIP2 "Disable support of bzip2 compressed fonts." OFF)
+cmake_dependent_option(FT_REQUIRE_BZIP2 "Require support of bzip2 compressed fonts." OFF "NOT FT_DISABLE_BZIP2" OFF)
+
+option(FT_DISABLE_PNG "Disable support of PNG compressed OpenType embedded bitmaps." OFF)
+cmake_dependent_option(FT_REQUIRE_PNG "Require support of PNG compressed OpenType embedded bitmaps." OFF "NOT FT_DISABLE_PNG" OFF)
+
+option(FT_DISABLE_HARFBUZZ "Disable HarfBuzz for improving auto-hinting of OpenType fonts." OFF)
+cmake_dependent_option(FT_REQUIRE_HARFBUZZ "Require HarfBuzz for improving auto-hinting of OpenType fonts." OFF "NOT FT_DISABLE_HARFBUZZ" OFF)
+
+option(FT_DISABLE_BROTLI "Disable support of compressed WOFF2 fonts." OFF)
+cmake_dependent_option(FT_REQUIRE_BROTLI "Require support of compressed WOFF2 fonts." OFF "NOT FT_DISABLE_BROTLI" OFF)
 
 
 # Disallow in-source builds
@@ -208,35 +222,45 @@ endif ()
 
 
 # Find dependencies
-set(HARFBUZZ_MIN_VERSION "2.0.0")
-if (FT_WITH_HARFBUZZ)
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
-else ()
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
+if (NOT FT_DISABLE_HARFBUZZ)
+  set(HARFBUZZ_MIN_VERSION "2.0.0")
+  if (FT_REQUIRE_HARFBUZZ)
+    find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
+  else ()
+    find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
+  endif ()
 endif ()
 
-if (FT_WITH_PNG)
-  find_package(PNG REQUIRED)
-else ()
-  find_package(PNG)
+if (NOT FT_DISABLE_PNG)
+  if (FT_REQUIRE_PNG)
+    find_package(PNG REQUIRED)
+  else ()
+    find_package(PNG)
+  endif ()
 endif ()
 
-if (FT_WITH_ZLIB)
-  find_package(ZLIB REQUIRED)
-else ()
-  find_package(ZLIB)
+if (NOT FT_DISABLE_ZLIB)
+  if (FT_REQUIRE_ZLIB)
+    find_package(ZLIB REQUIRED)
+  else ()
+    find_package(ZLIB)
+  endif ()
 endif ()
 
-if (FT_WITH_BZIP2)
-  find_package(BZip2 REQUIRED)
-else ()
-  find_package(BZip2)
+if (NOT FT_DISABLE_BZIP2)
+  if (FT_REQUIRE_BZIP2)
+    find_package(BZip2 REQUIRED)
+  else ()
+    find_package(BZip2)
+  endif ()
 endif ()
 
-if (FT_WITH_BROTLI)
-  find_package(BrotliDec REQUIRED)
-else ()
-  find_package(BrotliDec)
+if (NOT FT_DISABLE_BROTLI)
+  if (FT_REQUIRE_BROTLI)
+    find_package(BrotliDec REQUIRED)
+  else ()
+    find_package(BrotliDec)
+  endif ()
 endif ()
 
 # Create the configuration file
