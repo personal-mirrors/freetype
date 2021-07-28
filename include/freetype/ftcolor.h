@@ -1474,6 +1474,46 @@ FT_BEGIN_HEADER
                             FT_Color_Root_Transform  root_transform,
                             FT_OpaquePaint*          paint );
 
+  /**************************************************************************
+   *
+   * @function:
+   *   FT_Get_ClipBox
+   *
+   * @description:
+   *   Searches for a 'COLR' v1 clip box for the specified base_glyph
+   *   and fills the clip_box parameter with the 'COLR' v1 ClipBox
+   *   information if one is found.
+   *
+   * @input:
+   *   face ::
+   *     A handle to the parent face object.
+   *
+   *   base_glyph ::
+   *     The glyph index for which to retrieve the clip box.
+   *
+   * @output:
+   *   clip_box ::
+   *     The clip box for the requested base_glyph if one is found. The
+   *     bounding box is computed taking scale and transformations
+   *     configured on the FT_Face into account.  FT_BBox contains
+   *     values in 26.6 format.  Reset scale to 1 and remove transforms
+   *     configured using FT_Set_Tranfsorm in order to retrieve clip box
+   *     in font units.
+   *
+   * @return:
+   *   Value~1 if a ClipBox is found.  If no clip box is found or an
+   *   error occured, value~0 is returned.
+   *
+   * @since:
+   *   2.11 -- **currently experimental only!**  There might be changes
+   *   without retaining backward compatibility of both the API and ABI.
+   *
+   */
+  FT_EXPORT( FT_Bool )
+  FT_Get_ClipBox( FT_Face                 face,
+                  FT_UInt                 base_glyph,
+                  FT_BBox*                clip_box );
+
 
   /**************************************************************************
    *

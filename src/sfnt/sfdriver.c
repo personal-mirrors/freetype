@@ -1293,6 +1293,8 @@
 
     PUT_COLOR_LAYERS_V1( tt_face_get_colr_glyph_paint ),
                  /* TT_Get_Colr_Glyph_Paint_Func  get_colr_glyph_paint */
+    PUT_COLOR_LAYERS_V1( tt_face_get_clipbox ),
+                 /* TT_Get_ClipBox_Func           get_clipbox */
     PUT_COLOR_LAYERS_V1( tt_face_get_paint_layers ),
                  /* TT_Get_Paint_Layers_Func      get_paint_layers     */
     PUT_COLOR_LAYERS_V1( tt_face_get_colorline_stops ),
