@@ -5638,6 +5638,33 @@
       return 0;
   }
 
+/* documentation is in ftcolor.h */
+
+  FT_EXPORT_DEF( FT_Bool )
+  FT_Get_ClipBox( FT_Face   face,
+                  FT_UInt   base_glyph,
+                  FT_BBox*  clip_box )
+  {
+    TT_Face       ttface;
+    SFNT_Service  sfnt;
+
+
+    if ( !face || !clip_box )
+      return 0;
+
+    if ( !FT_IS_SFNT( face ) )
+      return 0;
+
+    ttface = (TT_Face)face;
+    sfnt   = (SFNT_Service)ttface->sfnt;
+
+    if ( sfnt->get_clipbox )
+      return sfnt->get_clipbox( ttface,
+                                base_glyph,
+                                clip_box );
+    else
+      return 0;
+  }
 
   /* documentation is in freetype.h */
 

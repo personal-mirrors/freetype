@@ -94,6 +94,8 @@
     FT_ULong  num_layers_v1;
     FT_Byte*  layers_v1;
 
+    FT_Byte*  clip_list;
+
     /*
      * Paint tables start at the minimum of the end of the LayerList and the
      * end of the BaseGlyphList.  Record this location in a field here for
@@ -134,7 +136,7 @@
 
     FT_ULong  base_glyph_offset, layer_offset;
     FT_ULong  base_glyphs_offset_v1, num_base_glyphs_v1;
-    FT_ULong  layer_offset_v1, num_layers_v1;
+    FT_ULong  layer_offset_v1, num_layers_v1, clip_list_offset;
     FT_ULong  table_size;
 
 
@@ -225,6 +227,17 @@
         colr->paints_start_v1 =
           colr->base_glyphs_v1 +
           colr->num_base_glyphs_v1 * BASE_GLYPH_PAINT_RECORD_SIZE;
+      }
+
+      clip_list_offset = FT_NEXT_ULONG( p );
+
+      if ( clip_list_offset >= table_size )
+        goto InvalidTable;
+
+      if ( clip_list_offset ) {
+        colr->clip_list = (FT_Byte*)( table + clip_list_offset );
+      } else {
+        colr->clip_list = 0;
       }
     }
 
@@ -793,6 +806,123 @@
       opaque_paint->insert_root_transform = 0;
 
     return 1;
+  }
+
+  FT_LOCAL_DEF( FT_Bool )
+  tt_face_get_clipbox ( TT_Face   face,
+                        FT_UInt   base_glyph,
+                        FT_BBox*  clip_box )
+  {
+    Colr*  colr;
+    FT_Byte *p, *p1, *clip_base;
+
+    FT_Byte    clip_list_format;
+    FT_ULong   num_clip_boxes, i;
+    FT_UShort  gid_start, gid_end;
+    FT_UInt32  clip_box_offset;
+    FT_Byte    format;
+
+    const FT_Byte  num_corners = 4;
+    FT_Vector      corners[num_corners];
+    FT_Byte        j;
+    FT_BBox        new_bbox;
+
+    colr = (Colr*)face->colr;
+    if ( !colr )
+      return 0;
+
+    if ( !colr->clip_list )
+      return 0;
+
+    p = colr->clip_list;
+
+    clip_base = p;
+
+    clip_list_format = FT_NEXT_BYTE ( p );
+
+    /* Format byte used here to be able to upgrade ClipList for >16bit glyph
+     * ids, for now we can expect it to be 0. */
+    if ( !clip_list_format == 0 )
+      return 0;
+
+    num_clip_boxes = FT_NEXT_ULONG( p );
+
+    for ( i = 0; i < num_clip_boxes; ++i )
+    {
+      gid_start        = FT_NEXT_USHORT( p );
+      gid_end          = FT_NEXT_USHORT( p );
+      clip_box_offset  = FT_NEXT_UOFF3( p );
+
+      if ( base_glyph >= gid_start && base_glyph <= gid_end )
+      {
+        p1 = (FT_Byte*)( clip_base + clip_box_offset );
+
+        if ( p1 >= (FT_Byte*)( colr->table + colr->table_size ) )
+          return 0;
+
+        format = FT_NEXT_BYTE( p1 );
+
+        if ( format < 0 || format > 1 )
+          return 0;
+
+        /* face->root.size->metrics.x_scale and y_scale are factors that scale a
+         * font unit value in integers to a 26.6 fixed value according to
+         * requested size, see for example ft_recompute_scaled_metrics(). */
+        clip_box->xMin = FT_MulFix( FT_NEXT_SHORT( p1 ), face->root.size->metrics.x_scale );
+        clip_box->yMin = FT_MulFix( FT_NEXT_SHORT( p1 ), face->root.size->metrics.x_scale );
+        clip_box->xMax = FT_MulFix( FT_NEXT_SHORT( p1 ), face->root.size->metrics.x_scale );
+        clip_box->yMax = FT_MulFix( FT_NEXT_SHORT( p1 ), face->root.size->metrics.x_scale );
+
+        /* Make 4 corner points (xMin, yMin), (xMax, yMax), transform those. If
+         * we we would only transform two corner points and span a rectangle
+         * based on those, the rectangle may become too small to cover the
+         * glyph. */
+        corners[0].x = clip_box->xMin; corners[0].y = clip_box->yMin;
+        corners[1].x = clip_box->xMin; corners[1].y = clip_box->yMax;
+        corners[2].x = clip_box->xMax; corners[2].y = clip_box->yMax;
+        corners[3].x = clip_box->xMax; corners[3].y = clip_box->yMin;
+
+        for ( j = 0; j < num_corners; ++j )
+        {
+          if ( face->root.internal->transform_flags & 1 )
+          {
+            FT_Vector_Transform( &corners[j],
+                                 &face->root.internal->transform_matrix );
+          }
+
+          if ( face->root.internal->transform_flags & 2 )
+          {
+            corners[j].x += face->root.internal->transform_delta.x;
+            corners[j].y += face->root.internal->transform_delta.y;
+          }
+        }
+
+
+        /* Find maxima. */
+        new_bbox.xMin = corners[0].x;
+        new_bbox.xMax = corners[0].x;
+        new_bbox.yMin = corners[0].y;
+        new_bbox.yMax = corners[0].y;
+
+        for ( j = 1; j < num_corners; ++j )
+        {
+          if ( corners[j].x < new_bbox.xMin )
+            new_bbox.xMin = corners[j].x;
+          if ( corners[j].y < new_bbox.yMin )
+            new_bbox.yMin = corners[j].y;
+          if ( corners[j].x > new_bbox.xMax )
+            new_bbox.xMax = corners[j].x;
+          if ( corners[j].y > new_bbox.yMax )
+            new_bbox.yMax = corners[j].y;
+        }
+
+        *clip_box = new_bbox;
+
+        return 1;
+      }
+    }
+
+    return 0;
   }
 
 

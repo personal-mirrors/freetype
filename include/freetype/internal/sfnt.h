@@ -555,6 +555,42 @@ FT_BEGIN_HEADER
                                       FT_OpaquePaint           *paint );
 
 
+
+  /**************************************************************************
+   *
+   * @functype:
+   *   TT_Get_ClipBox_Func
+   *
+   * @description:
+   *   Searches for a 'COLR' v1 clip box for the specified base_glyph
+   *   and fills the clip_box parameter with the 'COLR' v1 ClipBox
+   *   information if one is found.
+   *
+   * @input:
+   *   face ::
+   *     A handle to the parent face object.
+   *
+   *   base_glyph ::
+   *     The glyph index for which to retrieve the clip box.
+   *
+   * @output:
+   *   clip_box ::
+   *     The clip box for the requested base_glyph if one is found. The
+   *     bounding box is computed taking scale and transformations
+   *     configured on the FT_Face into account.  Reset scale to 1 and
+   *     remove transforms configured using FT_Set_Tranfsorm in order to
+   *     retrieve clip box in font units.
+   *
+   * @return:
+   *   Value~1 if a ClipBox is found.  If no clip box is found or an
+   *   error occured, value~0 is returned.
+   */
+  typedef FT_Bool
+  ( *TT_Get_ClipBox_Func )( TT_Face   face,
+                            FT_UInt   base_glyph,
+                            FT_BBox*  clip_box );
+
+
   /**************************************************************************
    *
    * @functype:
@@ -897,6 +933,7 @@ FT_BEGIN_HEADER
     TT_Set_Palette_Func            set_palette;
     TT_Get_Colr_Layer_Func         get_colr_layer;
     TT_Get_Color_Glyph_Paint_Func  get_colr_glyph_paint;
+    TT_Get_ClipBox_Func            get_clipbox;
     TT_Get_Paint_Layers_Func       get_paint_layers;
     TT_Get_Colorline_Stops_Func    get_colorline_stops;
     TT_Get_Paint_Func              get_paint;
@@ -951,6 +988,7 @@ FT_BEGIN_HEADER
           set_palette_,                  \
           get_colr_layer_,               \
           get_colr_glyph_paint_,         \
+          get_clipbox_,                  \
           get_paint_layers_,             \
           get_colorline_stops_,          \
           get_paint_,                    \
@@ -995,6 +1033,7 @@ FT_BEGIN_HEADER
     set_palette_,                        \
     get_colr_layer_,                     \
     get_colr_glyph_paint_,               \
+    get_clipbox_,                        \
     get_paint_layers_,                   \
     get_colorline_stops_,                \
     get_paint_,                          \
