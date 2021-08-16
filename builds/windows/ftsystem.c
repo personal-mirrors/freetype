@@ -211,6 +211,10 @@
     HANDLE         file;
     HANDLE         fm;
     LARGE_INTEGER  size;
+#ifdef _UNICODE
+    int            len;
+    WCHAR         *filepathname_w;
+#endif
 
 
     if ( !stream )
@@ -218,13 +222,13 @@
 
 #ifdef _UNICODE
     /* convert from UTF8 to WCHAR */
-    iLen = MultiByteToWideChar( CP_UTF8, 0, filepathname, -1, NULL, 0 );
+    len = MultiByteToWideChar( CP_UTF8, 0, filepathname, -1, NULL, 0 );
 
-    filepathname_w = (WCHAR *)malloc( iLen * sizeof(WCHAR) );
+    filepathname_w = (WCHAR *)malloc( len * sizeof(WCHAR) );
     if ( !filepathname_w )
       return FT_THROW( Out_Of_Memory );
 
-    MultiByteToWideChar( CP_UTF8, 0, filepathname, -1, filepathname_w, iLen );
+    MultiByteToWideChar( CP_UTF8, 0, filepathname, -1, filepathname_w, len );
 
     /* open the file */
     file = CreateFileW( filepathname_w, GENERIC_READ, FILE_SHARE_READ, NULL,
