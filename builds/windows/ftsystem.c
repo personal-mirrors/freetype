@@ -223,7 +223,7 @@
     if ( !filepathname )
       return FT_THROW( Invalid_Argument );
 
-#ifdef _UNICODE
+#ifdef UNICODE
     /* convert from UTF8 to WCHAR */
     len = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, filepathname, -1, NULL, 0 );
 
