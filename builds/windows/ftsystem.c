@@ -211,14 +211,46 @@
     HANDLE         file;
     HANDLE         fm;
     LARGE_INTEGER  size;
+#ifdef _UNICODE
+    int            len;
+    WCHAR         *filepathname_w;
+#endif
 
 
     if ( !stream )
       return FT_THROW( Invalid_Stream_Handle );
 
+    if ( !filepathname )
+      return FT_THROW( Invalid_Argument );
+
+#ifdef UNICODE
+    /* convert from UTF8 to WCHAR */
+    len = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, filepathname, -1, NULL, 0 );
+
+    if ( !len ) {
+      FT_ERROR(( "FT_Stream_Open: cannot convert file name to unicode\n" ));
+      return FT_THROW( Invalid_Argument );
+    }
+
+    /* allocate memory space for converted path name */
+    filepathname_w = (WCHAR *)malloc( len * sizeof(WCHAR) );
+    if ( !filepathname_w )
+      return FT_THROW( Out_Of_Memory );
+
+    /* now it is safe to do the translation */
+    MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, filepathname, -1, filepathname_w, len );
+
+    /* open the file */
+    file = CreateFileW( filepathname_w, GENERIC_READ, FILE_SHARE_READ, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+
+    /* free WCHAR file name */
+    free( filepathname_w );
+#else
     /* open the file */
     file = CreateFileA( filepathname, GENERIC_READ, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+#endif
     if ( file == INVALID_HANDLE_VALUE )
     {
       FT_ERROR(( "FT_Stream_Open:" ));
@@ -226,7 +258,9 @@
       return FT_THROW( Cannot_Open_Resource );
     }
 
-    if ( GetFileSizeEx( file, &size ) == FALSE )
+    /* use GetFileSize(), supported also by Windows CE */
+    size.u.LowPart = GetFileSize( file, (DWORD *)&size.u.HighPart );
+    if ( size.u.LowPart == INVALID_FILE_SIZE && GetLastError() != NO_ERROR )
     {
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not retrieve size of file `%s'\n", filepathname ));
