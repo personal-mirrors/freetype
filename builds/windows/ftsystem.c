@@ -225,7 +225,7 @@
 
 #ifdef UNICODE
     /* convert from UTF8 to WCHAR */
-    len = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, filepathname, -1, NULL, 0 );
+    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS, filepathname, -1, NULL, 0 );
 
     if ( !len ) {
       FT_ERROR(( "FT_Stream_Open: cannot convert file name to unicode\n" ));
@@ -238,7 +238,7 @@
       return FT_THROW( Out_Of_Memory );
 
     /* now it is safe to do the translation */
-    MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, filepathname, -1, filepathname_w, len );
+    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS, filepathname, -1, filepathname_w, len );
 
     /* open the file */
     file = CreateFileW( filepathname_w, GENERIC_READ, FILE_SHARE_READ, NULL,
