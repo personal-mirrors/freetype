@@ -258,9 +258,14 @@
       return FT_THROW( Cannot_Open_Resource );
     }
 
-    /* use GetFileSize(), supported also by Windows CE */
+#if defined _WIN32_WCE || defined _WIN32_WINDOWS || (defined _WIN32_WINNT && _WIN32_WINNT <= 0x0400)
+    /* Use GetFileSize() for Windows 95/98/Me/NT 4.0 and Windows CE/Embedded/Mobile */
     size.u.LowPart = GetFileSize( file, (DWORD *)&size.u.HighPart );
     if ( size.u.LowPart == INVALID_FILE_SIZE && GetLastError() != NO_ERROR )
+#else
+    /* Use GetFileSizeEx for modern Windows */
+    if ( GetFileSizeEx( file, &size ) == FALSE )
+#endif
     {
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not retrieve size of file `%s'\n", filepathname ));
