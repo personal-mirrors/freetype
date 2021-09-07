@@ -28,8 +28,6 @@
   /* memory-mapping includes and definitions */
 #include <windows.h>
 
-#include <stdlib.h>
-
 
   /**************************************************************************
    *
@@ -69,9 +67,7 @@
   ft_alloc( FT_Memory  memory,
             long       size )
   {
-    FT_UNUSED( memory );
-
-    return malloc( size );
+    return HeapAlloc( memory->user, 0, size );
   }
 
 
@@ -105,10 +101,9 @@
               long       new_size,
               void*      block )
   {
-    FT_UNUSED( memory );
     FT_UNUSED( cur_size );
 
-    return realloc( block, new_size );
+    return HeapReAlloc( memory->user, 0, block, new_size );
   }
 
 
@@ -131,9 +126,7 @@
   ft_free( FT_Memory  memory,
            void*      block )
   {
-    FT_UNUSED( memory );
-
-    free( block );
+    HeapFree( memory->user, 0, block );
   }
 
 
@@ -358,12 +351,14 @@
   FT_New_Memory( void )
   {
     FT_Memory  memory;
+    HANDLE     heap;
 
 
-    memory = (FT_Memory)malloc( sizeof ( *memory ) );
+    heap   = GetProcessHeap();
+    memory = (FT_Memory)HeapAlloc( heap, 0, sizeof ( *memory ) );
     if ( memory )
     {
-      memory->user    = NULL;
+      memory->user    = heap;
       memory->alloc   = ft_alloc;
       memory->realloc = ft_realloc;
       memory->free    = ft_free;
