@@ -650,6 +650,7 @@
           /* Then scale the metrics */
           metrics->horiAdvance = FT_MulFix( metrics->horiAdvance, x_scale );
           metrics->vertAdvance = FT_MulFix( metrics->vertAdvance, y_scale );
+          metrics->vertBearingY = FT_MulFix( metrics->vertBearingY, y_scale );
         }
 
         /* compute the other metrics */
