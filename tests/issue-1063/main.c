@@ -1,9 +1,16 @@
-#include <limits.h>
 #include <stdio.h>
 
 #include <freetype/freetype.h>
 #include <ft2build.h>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+#else
+#include_next <limits.h>
+#endif
 
 int
 main( void )
