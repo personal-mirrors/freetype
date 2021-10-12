@@ -1,5 +1,6 @@
 stages:
  - build
+ - test
 
 # FIXME: Use --werror once warnings are fixed.
 variables:
@@ -22,6 +23,12 @@ variables:
   # https://gitlab.freedesktop.org/freetype/docker-images/container_registry/20896
   image: 'registry.freedesktop.org/freetype/docker-images/debian:latest'
   stage: 'build'
+
+.test linux common:
+  # See
+  # https://gitlab.freedesktop.org/freetype/docker-images/container_registry/20896
+  image: 'registry.freedesktop.org/freetype/docker-images/debian:latest'
+  stage: 'test'
 
 .build windows meson:
   extends: '.build windows common'
@@ -142,3 +149,84 @@ linux cmake libs:
                    -D FT_REQUIRE_ZLIB=TRUE
 
     cmake --build build --target install
+
+# Linux test jobs
+linux autotools test:
+  extends: '.test linux common'
+  script:
+    # Go to parent of current directory, to clone the repos parallel to current one
+    - cd ..
+    - rm -rf regressiontest 
+    - rm -rf freetype-demos
+    
+    - git clone https://gitlab.freedesktop.org/thesarthakbhardwaj/regressiontest.git
+    - git clone https://gitlab.freedesktop.org/thesarthakbhardwaj/freetype-demos.git
+
+    # [TODO]: Merge regtest into master and remove this line
+    - cd regressiontest && git checkout regtest
+    - cd ..
+    # [TODO]: Fix ft-demos master and remove this line
+    - cd freetype-demos && git checkout devel
+    - cd ../freetype
+
+    # Check if upstream remote already exists, add it if it doesn't
+    - 'git remote -v | grep -w upstream || git remote add upstream https://gitlab.freedesktop.org/freetype/freetype.git'
+    - git remote set-url upstream https://gitlab.freedesktop.org/freetype/freetype.git
+
+    # Check out master branch to build base version of FreeType for comparison
+    - git fetch upstream master
+    - git checkout -B base --track upstream/master
+    - git reset --hard upstream/master
+
+    # Build FreeType
+    - git clean -fdx
+    - './autogen.sh > /dev/null 2>&1'
+    - './configure --disable-shared > /dev/null 2>&1'
+    - 'make -j$(nproc) > /dev/null 2>&1'
+
+    # Build Demos
+    - cd ../freetype-demos
+    - 'make -j$(nproc) > /dev/null 2>&1'
+    - 'make install > /dev/null 2>&1'
+
+    # Generate baseline files
+    - echo "Generating base files"
+    - cd ../regressiontest
+    - ./gen_base.sh
+
+    # Check out the last branch (for which the CI is running) and build FreeType
+    - cd ../freetype
+    - 'git checkout -'
+    
+    # Build FreeType
+    - 'git clean -fdx > /dev/null 2>&1'
+    - './autogen.sh > /dev/null 2>&1'
+    - './configure --disable-shared > /dev/null 2>&1'
+    - 'make -j$(nproc) > /dev/null 2>&1'
+
+    # Build Demos
+    - cd ../freetype-demos
+    - 'git clean -fdx > /dev/null 2>&1'
+    - 'make -j$(nproc) > /dev/null 2>&1'
+    - 'make install > /dev/null 2>&1'
+
+    # Run tests
+    - echo "Running regression tests"
+    - cd ../regressiontest
+    - ./regression.sh
+
+    # Fail the job if regressions found
+    - >
+      if [ -f "report.tar.gz" ]; then
+          echo "Regressions Found"
+          mv report/ ../freetype
+          exit 1
+      else
+          echo "No regressions found"
+      fi
+
+  artifacts:
+    paths:
+      - report/
+    when: on_failure
+    expire_in: 1 week

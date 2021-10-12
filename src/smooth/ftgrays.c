@@ -1079,7 +1079,7 @@ typedef ptrdiff_t  FT_PtrDist;
     if ( dx < dy )
       dx = dy;
 
-    if ( dx <= ONE_PIXEL / 4 )
+    if ( dx <= ONE_PIXEL / 3 )
     {
       gray_render_line( RAS_VAR_ p2.x, p2.y );
       return;
