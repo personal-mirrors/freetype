@@ -1002,7 +1002,7 @@
 
 
             if ( val )
-              subrNum = *val;
+              subrNum = (CF2_Int)(*val);
             else
               subrNum = -1;
           }
