@@ -1991,7 +1991,7 @@
 
 
               if ( val )
-                idx = *val;
+                idx = (FT_Int)(*val);
               else
                 idx = -1;
             }

@@ -1477,7 +1477,7 @@
 
     face->gasp.gaspRanges = gasp_ranges;
     gasp_ranges = NULL;
-    face->gasp.numRanges = num_ranges;
+    face->gasp.numRanges  = (FT_UShort)num_ranges;
 
     FT_FRAME_EXIT();
 
