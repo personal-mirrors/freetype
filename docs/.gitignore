@@ -4,7 +4,8 @@ reference/
 # HTML and Markdown files
 *.html
 *.md
-
+!DOCGUIDE.md
+!CONFIG.md
 # MkDocs Config file
 mkdocs.yml
 

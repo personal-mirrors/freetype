@@ -1,6 +1,3 @@
-FREETYPE LICENSES
------------------
-
 The FreeType  2 font  engine is  copyrighted work  and cannot  be used
 legally without  a software  license.  In order  to make  this project
 usable to  a vast majority of  developers, we distribute it  under two
@@ -37,6 +34,3 @@ too is compatible to the above two licenses.
 
 The  MD5 checksum  support  (only used  for  debugging in  development
 builds) is in the public domain.
-
-
---- end of LICENSE.TXT ---
