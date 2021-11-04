@@ -371,7 +371,7 @@
     if ( FT_READ_ULONG( tag ) )
       return error;
 
-#ifdef TT_CONFIG_OPTION_WOFF
+#ifdef FT_CONFIG_OPTION_USE_ZLIB
     if ( tag == TTAG_wOFF )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF; synthesizing SFNT\n" ));

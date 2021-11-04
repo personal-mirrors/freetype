@@ -592,13 +592,6 @@ FT_BEGIN_HEADER
 
   /**************************************************************************
    *
-   * Define `TT_CONFIG_OPTION_WOFF` if you want to support WOFF stream.
-   */
-#define TT_CONFIG_OPTION_WOFF
-
-
-  /**************************************************************************
-   *
    * Define `TT_CONFIG_OPTION_WOFF2` if you want to support WOFF2 stream.
    */
 #define TT_CONFIG_OPTION_WOFF2
