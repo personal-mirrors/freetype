@@ -389,7 +389,7 @@
     }
 #endif
 
-#ifdef TT_CONFIG_OPTION_WOFF2
+#ifdef FT_CONFIG_OPTION_USE_BROTLI
     if ( tag == TTAG_wOF2 )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF2; synthesizing SFNT\n" ));
