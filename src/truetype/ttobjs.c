@@ -716,8 +716,10 @@
     if ( error )
       goto Exit;
 
+#ifdef TT_USE_BYTECODE_INTERPRETER
     if ( tt_check_trickyness( ttface ) )
       ttface->face_flags |= FT_FACE_FLAG_TRICKY;
+#endif
 
     error = tt_face_load_hdmx( face, stream );
     if ( error )
