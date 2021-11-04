@@ -371,6 +371,7 @@
     if ( FT_READ_ULONG( tag ) )
       return error;
 
+#ifdef TT_CONFIG_OPTION_WOFF
     if ( tag == TTAG_wOFF )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF; synthesizing SFNT\n" ));
@@ -386,6 +387,7 @@
       stream = face->root.stream;
       goto retry;
     }
+#endif
 
     if ( tag == TTAG_wOF2 )
     {
