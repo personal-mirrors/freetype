@@ -264,25 +264,22 @@
     FT_Fixed  *deltas = NULL;
     FT_UInt    runcnt, cnt;
     FT_UInt    i, j;
+    FT_UInt    bytes_used;
     FT_Memory  memory = stream->memory;
     FT_Error   error  = FT_Err_Ok;
 
     FT_UNUSED( error );
 
 
-    if ( delta_cnt > size )
-    {
-      FT_TRACE1(( "ft_var_readpackeddeltas: number of points too large\n" ));
-      return NULL;
-    }
-
     if ( FT_NEW_ARRAY( deltas, delta_cnt ) )
       return NULL;
 
     i = 0;
-    while ( i < delta_cnt )
+    bytes_used = 0;
+    while ( i < delta_cnt && bytes_used < size )
     {
       runcnt = FT_GET_BYTE();
+      bytes_used++;
       cnt    = runcnt & GX_DT_DELTA_RUN_COUNT_MASK;
 
       if ( runcnt & GX_DT_DELTAS_ARE_ZERO )
@@ -294,14 +291,20 @@
       else if ( runcnt & GX_DT_DELTAS_ARE_WORDS )
       {
         /* `runcnt' shorts from the stack */
-        for ( j = 0; j <= cnt && i < delta_cnt; j++ )
+        for ( j = 0; j <= cnt && i < delta_cnt && bytes_used + 1 < size; j++ )
+        {
           deltas[i++] = FT_intToFixed( FT_GET_SHORT() );
+          bytes_used += 2;
+        }
       }
       else
       {
         /* `runcnt' signed bytes from the stack */
-        for ( j = 0; j <= cnt && i < delta_cnt; j++ )
+        for ( j = 0; j <= cnt && i < delta_cnt && bytes_used < size; j++ )
+        {
           deltas[i++] = FT_intToFixed( FT_GET_CHAR() );
+          bytes_used++;
+        }
       }
 
       if ( j <= cnt )
@@ -310,6 +313,14 @@
         FT_FREE( deltas );
         return NULL;
       }
+    }
+
+    if ( i < delta_cnt )
+    {
+      FT_TRACE1(( "ft_var_readpackeddeltas: number of points too large\n" ));
+      /* bad format */
+      FT_FREE( deltas );
+      return NULL;
     }
 
     return deltas;
