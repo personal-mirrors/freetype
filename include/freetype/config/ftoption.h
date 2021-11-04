@@ -601,6 +601,13 @@ FT_BEGIN_HEADER
 
   /**************************************************************************
    *
+   * Define `TT_CONFIG_OPTION_WOFF2` if you want to support WOFF2 stream.
+   */
+#define TT_CONFIG_OPTION_WOFF2
+
+
+  /**************************************************************************
+   *
    * TrueType CMap support
    *
    *   Here you can fine-tune which TrueType CMap table format shall be

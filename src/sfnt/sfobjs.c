@@ -389,6 +389,7 @@
     }
 #endif
 
+#ifdef TT_CONFIG_OPTION_WOFF2
     if ( tag == TTAG_wOF2 )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF2; synthesizing SFNT\n" ));
@@ -407,6 +408,7 @@
       stream = face->root.stream;
       goto retry;
     }
+#endif
 
     if ( tag != 0x00010000UL &&
          tag != TTAG_ttcf    &&
