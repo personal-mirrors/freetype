@@ -284,32 +284,40 @@
 
       if ( runcnt & GX_DT_DELTAS_ARE_ZERO )
       {
-        /* `runcnt' zeroes get added */
+        /* `cnt' + 1 zeroes get added */
         for ( j = 0; j <= cnt && i < delta_cnt; j++ )
           deltas[i++] = 0;
       }
       else if ( runcnt & GX_DT_DELTAS_ARE_WORDS )
       {
-        /* `runcnt' shorts from the stack */
-        for ( j = 0; j <= cnt && i < delta_cnt && bytes_used + 1 < size; j++ )
+        /* `cnt' + 1 shorts from the stack */
+        bytes_used += 2 * (cnt + 1);
+        if ( bytes_used > size )
         {
-          deltas[i++] = FT_intToFixed( FT_GET_SHORT() );
-          bytes_used += 2;
+          FT_TRACE1(( "ft_var_readpackeddeltas: number of short deltas too large\n" ));
+          FT_FREE( deltas );
+          return NULL;
         }
+        for ( j = 0; j <= cnt && i < delta_cnt; j++ )
+          deltas[i++] = FT_intToFixed( FT_GET_SHORT() );
       }
       else
       {
-        /* `runcnt' signed bytes from the stack */
-        for ( j = 0; j <= cnt && i < delta_cnt && bytes_used < size; j++ )
+        /* `cnt' + 1 signed bytes from the stack */
+        bytes_used += cnt + 1;
+        if ( bytes_used > size )
         {
-          deltas[i++] = FT_intToFixed( FT_GET_CHAR() );
-          bytes_used++;
+          FT_TRACE1(( "ft_var_readpackeddeltas: number of byte deltas too large\n" ));
+          FT_FREE( deltas );
+          return NULL;
         }
+        for ( j = 0; j <= cnt && i < delta_cnt; j++ )
+          deltas[i++] = FT_intToFixed( FT_GET_CHAR() );
       }
 
       if ( j <= cnt )
       {
-        /* bad format */
+        FT_TRACE1(( "ft_var_readpackeddeltas: number of deltas too large\n" ));
         FT_FREE( deltas );
         return NULL;
       }
@@ -317,8 +325,7 @@
 
     if ( i < delta_cnt )
     {
-      FT_TRACE1(( "ft_var_readpackeddeltas: number of points too large\n" ));
-      /* bad format */
+      FT_TRACE1(( "ft_var_readpackeddeltas: not enough deltas\n" ));
       FT_FREE( deltas );
       return NULL;
     }
