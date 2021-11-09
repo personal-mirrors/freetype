@@ -376,6 +376,8 @@ FT_BEGIN_HEADER
 
 #if FT_SIZEOF_INT == 4
 
+#if defined( _M_IX86 ) || defined( _M_AMD64 )
+
 #include <intrin.h>
 #pragma intrinsic( _BitScanReverse )
 
@@ -391,6 +393,14 @@ FT_BEGIN_HEADER
   }
 
 #define FT_MSB( x )  ( FT_MSB_i386( x ) )
+
+#else
+
+unsigned int _CountLeadingZeros( long );
+#pragma intrinsic( _CountLeadingZeros )
+#define FT_MSB( x )  ( 31 - _CountLeadingZeros( x ) )
+
+#endif
 
 #endif
 
