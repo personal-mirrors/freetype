@@ -457,7 +457,8 @@
     FT_UShort  format;
     FT_ULong   region_offset;
     FT_UInt    i, j, k;
-    FT_UInt    shortDeltaCount;
+    FT_UInt    wordDeltaCount;
+    FT_Bool    long_words;
 
     GX_Blend        blend = face->blend;
     GX_ItemVarData  varData;
@@ -572,15 +573,18 @@
         goto Exit;
 
       if ( FT_READ_USHORT( varData->itemCount )      ||
-           FT_READ_USHORT( shortDeltaCount )         ||
+           FT_READ_USHORT( wordDeltaCount )          ||
            FT_READ_USHORT( varData->regionIdxCount ) )
         goto Exit;
 
+      long_words      = !!( wordDeltaCount & 0x8000 );
+      wordDeltaCount &= 0x7FFF;
+
       /* check some data consistency */
-      if ( shortDeltaCount > varData->regionIdxCount )
+      if ( wordDeltaCount > varData->regionIdxCount )
       {
         FT_TRACE2(( "bad short count %d or region count %d\n",
-                    shortDeltaCount,
+                    wordDeltaCount,
                     varData->regionIdxCount ));
         error = FT_THROW( Invalid_Table );
         goto Exit;
@@ -616,39 +620,52 @@
 
       /* Parse delta set.                                                */
       /*                                                                 */
-      /* On input, deltas are (shortDeltaCount + regionIdxCount) bytes   */
-      /* each; on output, deltas are expanded to `regionIdxCount' shorts */
-      /* each.                                                           */
+      /* On input, deltas are (wordDeltaCount + regionIdxCount) bytes    */
+      /* each if `long_words` isn't set, and twice as much otherwise.    */
+      /*                                                                 */
+      /* On output, deltas are expanded to `regionIdxCount` shorts each. */
       if ( FT_NEW_ARRAY( varData->deltaSet,
                          varData->regionIdxCount * varData->itemCount ) )
         goto Exit;
 
-      /* the delta set is stored as a 2-dimensional array of shorts; */
-      /* sign-extend signed bytes to signed shorts                   */
-      for ( j = 0; j < varData->itemCount * varData->regionIdxCount; )
+      /* the delta set is stored as a 2-dimensional array of shorts */
+      if ( long_words )
       {
-        for ( k = 0; k < shortDeltaCount; k++, j++ )
+        /* new in OpenType 1.9, currently for 'COLR' table only;          */
+        /* the deltas are interpreted as 16.16 fixed-point scaling values */
+
+        /* not supported yet */
+
+        error = FT_THROW( Invalid_Table );
+        goto Exit;
+      }
+      else
+      {
+        for ( j = 0; j < varData->itemCount * varData->regionIdxCount; )
         {
-          /* read the short deltas */
-          FT_Short  delta;
+          for ( k = 0; k < wordDeltaCount; k++, j++ )
+          {
+            /* read the short deltas */
+            FT_Short  delta;
 
 
-          if ( FT_READ_SHORT( delta ) )
-            goto Exit;
+            if ( FT_READ_SHORT( delta ) )
+              goto Exit;
 
-          varData->deltaSet[j] = delta;
-        }
+            varData->deltaSet[j] = delta;
+          }
 
-        for ( ; k < varData->regionIdxCount; k++, j++ )
-        {
-          /* read the (signed) byte deltas */
-          FT_Char  delta;
+          for ( ; k < varData->regionIdxCount; k++, j++ )
+          {
+            /* read the (signed) byte deltas */
+            FT_Char  delta;
 
 
-          if ( FT_READ_CHAR( delta ) )
-            goto Exit;
+            if ( FT_READ_CHAR( delta ) )
+              goto Exit;
 
-          varData->deltaSet[j] = delta;
+            varData->deltaSet[j] = delta;
+          }
         }
       }
     }
@@ -664,36 +681,65 @@
   ft_var_load_delta_set_index_mapping( TT_Face            face,
                                        FT_ULong           offset,
                                        GX_DeltaSetIdxMap  map,
-                                       GX_ItemVarStore    itemStore )
+                                       GX_ItemVarStore    itemStore,
+                                       FT_ULong           table_len )
   {
     FT_Stream  stream = FT_FACE_STREAM( face );
     FT_Memory  memory = stream->memory;
 
-    FT_Error   error;
+    FT_Error  error;
 
-    FT_UShort  format;
-    FT_UInt    entrySize;
-    FT_UInt    innerBitCount;
-    FT_UInt    innerIndexMask;
-    FT_UInt    i, j;
+    FT_Byte   format;
+    FT_Byte   entryFormat;
+    FT_UInt   entrySize;
+    FT_UInt   innerBitCount;
+    FT_UInt   innerIndexMask;
+    FT_ULong  i;
+    FT_UInt   j;
 
 
-    if ( FT_STREAM_SEEK( offset )        ||
-         FT_READ_USHORT( format )        ||
-         FT_READ_USHORT( map->mapCount ) )
+    if ( FT_STREAM_SEEK( offset )    ||
+         FT_READ_BYTE( format )      ||
+         FT_READ_BYTE( entryFormat ) )
       goto Exit;
 
-    if ( format & 0xFFC0 )
+    if ( format == 0 )
+    {
+      if ( FT_READ_USHORT( map->mapCount ) )
+        goto Exit;
+    }
+    else if ( format == 1 ) /* new in OpenType 1.9 */
+    {
+      if ( FT_READ_ULONG( map->mapCount ) )
+        goto Exit;
+    }
+    else
     {
       FT_TRACE2(( "bad map format %d\n", format ));
       error = FT_THROW( Invalid_Table );
       goto Exit;
     }
 
+    if ( entryFormat & 0xC0 )
+    {
+      FT_TRACE2(( "bad entry format %d\n", format ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+
     /* bytes per entry: 1, 2, 3, or 4 */
-    entrySize      = ( ( format & 0x0030 ) >> 4 ) + 1;
-    innerBitCount  = ( format & 0x000F ) + 1;
+    entrySize      = ( ( entryFormat & 0x30 ) >> 4 ) + 1;
+    innerBitCount  = ( entryFormat & 0x0F ) + 1;
     innerIndexMask = ( 1 << innerBitCount ) - 1;
+
+    /* rough sanity check */
+    if ( map->mapCount * entrySize > table_len )
+    {
+      FT_TRACE1(( "ft_var_load_delta_set_index_mapping:"
+                  " invalid number of delta-set index mappings\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
 
     if ( FT_NEW_ARRAY( map->innerIndex, map->mapCount ) )
       goto Exit;
@@ -723,7 +769,7 @@
 
       if ( outerIndex >= itemStore->dataCount )
       {
-        FT_TRACE2(( "outerIndex[%d] == %d out of range\n",
+        FT_TRACE2(( "outerIndex[%ld] == %d out of range\n",
                     i,
                     outerIndex ));
         error = FT_THROW( Invalid_Table );
@@ -736,7 +782,7 @@
 
       if ( innerIndex >= itemStore->varData[outerIndex].itemCount )
       {
-        FT_TRACE2(( "innerIndex[%d] == %d out of range\n",
+        FT_TRACE2(( "innerIndex[%ld] == %d out of range\n",
                     i,
                     innerIndex ));
         error = FT_THROW( Invalid_Table );
@@ -861,7 +907,8 @@
                 face,
                 table_offset + widthMap_offset,
                 &table->widthMap,
-                &table->itemStore );
+                &table->itemStore,
+                table_len );
       if ( error )
         goto Exit;
     }
