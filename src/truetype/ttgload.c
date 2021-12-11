@@ -2230,10 +2230,6 @@
                          FT_UInt    glyph_index )
   {
     TT_Face    face   = loader->face;
-#if defined TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY || \
-    defined TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
-    TT_Driver  driver = (TT_Driver)FT_FACE_DRIVER( face );
-#endif
 
     FT_BBox       bbox;
     FT_Fixed      y_scale;
@@ -2256,37 +2252,10 @@
 
     glyph->metrics.horiBearingX = bbox.xMin;
     glyph->metrics.horiBearingY = bbox.yMax;
-    glyph->metrics.horiAdvance  = SUB_LONG(loader->pp2.x, loader->pp1.x);
-
-    /* Adjust advance width to the value contained in the hdmx table   */
-    /* unless FT_LOAD_COMPUTE_METRICS is set or backward compatibility */
-    /* mode of the v40 interpreter is active.  See `ttinterp.h' for    */
-    /* details on backward compatibility mode.                         */
-    if ( IS_HINTED( loader->load_flags )                                &&
-         !( loader->load_flags & FT_LOAD_COMPUTE_METRICS )              &&
-#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
-         !( driver->interpreter_version == TT_INTERPRETER_VERSION_40  &&
-            ( loader->exec && loader->exec->backward_compatibility  ) ) &&
-#endif
-#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
-         !( driver->interpreter_version == TT_INTERPRETER_VERSION_38  &&
-            !SPH_OPTION_BITMAP_WIDTHS                                 &&
-            FT_LOAD_TARGET_MODE( loader->load_flags ) !=
-                                                 FT_RENDER_MODE_MONO  &&
-            ( loader->exec && !loader->exec->compatible_widths )      ) &&
-#endif
-         !face->postscript.isFixedPitch                                 )
-    {
-      FT_Byte*  widthp;
-
-
-      widthp = tt_face_get_device_metrics( face,
-                                           size->metrics->x_ppem,
-                                           glyph_index );
-
-      if ( widthp )
-        glyph->metrics.horiAdvance = *widthp * 64;
-    }
+    if ( loader->widthp )
+      glyph->metrics.horiAdvance = loader->widthp[glyph_index] * 64;
+    else
+      glyph->metrics.horiAdvance = SUB_LONG(loader->pp2.x, loader->pp1.x);
 
     /* set glyph dimensions */
     glyph->metrics.width  = SUB_LONG( bbox.xMax, bbox.xMin );
@@ -2720,11 +2689,64 @@
       if ( driver->interpreter_version == TT_INTERPRETER_VERSION_38 &&
            exec->GS.instruct_control & 4                            )
         exec->ignore_x_mode = 0;
-#endif
+
+      exec->iup_called = FALSE;
+#endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
+
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+      /*
+       * Toggle backward compatibility according to what font wants, except
+       * when
+       *
+       * 1) we have a `tricky' font that heavily relies on the interpreter to
+       *    render glyphs correctly, for example DFKai-SB, or
+       * 2) FT_RENDER_MODE_MONO (i.e, monochome rendering) is requested.
+       *
+       * In those cases, backward compatibility needs to be turned off to get
+       * correct rendering.  The rendering is then completely up to the
+       * font's programming.
+       *
+       */
+      if ( driver->interpreter_version == TT_INTERPRETER_VERSION_38 &&
+           subpixel_hinting_lean                                    &&
+           !FT_IS_TRICKY( glyph->face )                             )
+        exec->backward_compatibility = !( exec->GS.instruct_control & 4 );
+      else
+        exec->backward_compatibility = FALSE;
+
+      exec->iupx_called = FALSE;
+      exec->iupy_called = FALSE;
+#endif /* TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL */
 
       exec->pedantic_hinting = FT_BOOL( load_flags & FT_LOAD_PEDANTIC );
       loader->exec = exec;
       loader->instructions = exec->glyphIns;
+
+      /* Use the hdmx table if any unless FT_LOAD_COMPUTE_METRICS */
+      /* is set or backward compatibility mode of the v38 or v40  */
+      /* interpreters is active.  See `ttinterp.h' for details on */
+      /* backward compatibility mode.                             */
+      if ( IS_HINTED( loader->load_flags )                                &&
+           !( loader->load_flags & FT_LOAD_COMPUTE_METRICS )              &&
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+           !( driver->interpreter_version == TT_INTERPRETER_VERSION_40  &&
+              exec->backward_compatibility                              ) &&
+#endif
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+           !( driver->interpreter_version == TT_INTERPRETER_VERSION_38  &&
+              !SPH_OPTION_BITMAP_WIDTHS                                 &&
+              FT_LOAD_TARGET_MODE( loader->load_flags ) !=
+                                                   FT_RENDER_MODE_MONO  &&
+              exec->compatible_widths                                   ) &&
+#endif
+           !face->postscript.isFixedPitch                                 )
+      {
+        loader->widthp = tt_face_get_device_metrics( face,
+                                                     size->metrics->x_ppem,
+                                                     0 );
+      }
+      else
+        loader->widthp = NULL;
     }
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
@@ -2923,6 +2945,15 @@
     if ( error )
       goto Exit;
 
+    /* done if we are only interested in the `hdmx` advance */
+    if ( load_flags & FT_LOAD_ADVANCE_ONLY         &&
+         !( load_flags & FT_LOAD_VERTICAL_LAYOUT ) &&
+         loader.widthp                             )
+    {
+      glyph->metrics.horiAdvance = loader.widthp[glyph_index] * 64;
+      goto Done;
+    }
+
     glyph->format        = FT_GLYPH_FORMAT_OUTLINE;
     glyph->num_subglyphs = 0;
     glyph->outline.flags = 0;
@@ -3001,6 +3032,7 @@
                 glyph->outline.n_points,
                 glyph->outline.flags ));
 
+  Done:
     tt_loader_done( &loader );
 
   Exit:
