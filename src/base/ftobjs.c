@@ -19,6 +19,7 @@
 #include <freetype/ftlist.h>
 #include <freetype/ftoutln.h>
 #include <freetype/ftfntfmt.h>
+#include <freetype/otsvg.h>
 
 #include <freetype/internal/ftvalid.h>
 #include <freetype/internal/ftobjs.h>
@@ -328,6 +329,19 @@
     if ( !error && clazz->init_slot )
       error = clazz->init_slot( slot );
 
+#ifdef FT_CONFIG_OPTION_SVG
+    /* if SVG table exists, allocate the space in slot->other */
+    if ( slot->face->face_flags & FT_FACE_FLAG_SVG )
+    {
+      FT_SVG_Document  document;
+
+
+      if ( FT_NEW( document ) )
+        goto Exit;
+      slot->other = document;
+    }
+#endif
+
   Exit:
     return error;
   }
@@ -564,8 +578,27 @@
     slot->subglyphs     = NULL;
     slot->control_data  = NULL;
     slot->control_len   = 0;
-    slot->other         = NULL;
-    slot->format        = FT_GLYPH_FORMAT_NONE;
+
+#ifndef FT_CONFIG_OPTION_SVG
+    slot->other = NULL;
+#else
+    if ( !( slot->face->face_flags & FT_FACE_FLAG_SVG ) )
+      slot->other = NULL;
+    else
+    {
+      if ( slot->internal->flags & FT_GLYPH_OWN_GZIP_SVG )
+      {
+        FT_Memory        memory = slot->face->memory;
+        FT_SVG_Document  doc    = (FT_SVG_Document)slot->other;
+
+
+        FT_FREE( doc->svg_document );
+        slot->internal->load_flags &= ~FT_GLYPH_OWN_GZIP_SVG;
+      }
+    }
+#endif
+
+    slot->format = FT_GLYPH_FORMAT_NONE;
 
     slot->linearHoriAdvance = 0;
     slot->linearVertAdvance = 0;
@@ -583,6 +616,23 @@
     FT_Driver_Class  clazz  = driver->clazz;
     FT_Memory        memory = driver->root.memory;
 
+#ifdef FT_CONFIG_OPTION_SVG
+    if ( slot->face->face_flags & FT_FACE_FLAG_SVG )
+    {
+      /* free memory in case SVG was there */
+      if ( slot->internal->flags & FT_GLYPH_OWN_GZIP_SVG )
+      {
+        FT_SVG_Document  doc = (FT_SVG_Document)slot->other;
+
+
+        FT_FREE( doc->svg_document );
+
+        slot->internal->flags &= ~FT_GLYPH_OWN_GZIP_SVG;
+      }
+
+      FT_FREE( slot->other );
+    }
+#endif
 
     if ( clazz->done_slot )
       clazz->done_slot( slot );
