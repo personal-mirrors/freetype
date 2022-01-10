@@ -225,12 +225,13 @@
     sizeof ( T42_SizeRec ),
     sizeof ( T42_GlyphSlotRec ),
 
-    T42_Face_Init,              /* FT_Face_InitFunc  init_face */
-    T42_Face_Done,              /* FT_Face_DoneFunc  done_face */
-    T42_Size_Init,              /* FT_Size_InitFunc  init_size */
-    T42_Size_Done,              /* FT_Size_DoneFunc  done_size */
-    T42_GlyphSlot_Init,         /* FT_Slot_InitFunc  init_slot */
-    T42_GlyphSlot_Done,         /* FT_Slot_DoneFunc  done_slot */
+    T42_Face_Init,              /* FT_Face_InitFunc   init_face */
+    T42_Face_Clone,             /* FT_Face_CloneFunc  clone_face */
+    T42_Face_Done,              /* FT_Face_DoneFunc   done_face */
+    T42_Size_Init,              /* FT_Size_InitFunc   init_size */
+    T42_Size_Done,              /* FT_Size_DoneFunc   done_size */
+    T42_GlyphSlot_Init,         /* FT_Slot_InitFunc   init_slot */
+    T42_GlyphSlot_Done,         /* FT_Slot_DoneFunc   done_slot */
 
     T42_GlyphSlot_Load,         /* FT_Slot_LoadFunc  load_glyph */
 

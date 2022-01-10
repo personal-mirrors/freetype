@@ -400,6 +400,14 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  T42_Face_Clone( FT_Face   t42face,        /* T42_Face */
+                  FT_Face*  target )
+  {
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
   FT_LOCAL_DEF( void )
   T42_Face_Done( FT_Face  t42face )
   {

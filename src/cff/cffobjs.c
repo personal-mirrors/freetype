@@ -1133,6 +1133,14 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  cff_face_clone( FT_Face   cffface,         /* CFF_Face */
+                  FT_Face*  target )
+  {
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
   FT_LOCAL_DEF( void )
   cff_face_done( FT_Face  cffface )         /* CFF_Face */
   {

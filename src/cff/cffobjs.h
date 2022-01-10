@@ -61,6 +61,10 @@ FT_BEGIN_HEADER
                  FT_Int         num_params,
                  FT_Parameter*  params );
 
+  FT_LOCAL_DEF( FT_Error )
+  cff_face_clone( FT_Face   face,               /* CFF_Face */
+                  FT_Face*  target );
+
   FT_LOCAL( void )
   cff_face_done( FT_Face  face );               /* CFF_Face */
 

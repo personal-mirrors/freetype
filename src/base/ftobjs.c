@@ -2883,6 +2883,12 @@
     return error;
   }
 
+  FT_EXPORT( FT_Error )
+  FT_Clone_Face( FT_Face  face,
+                 FT_Face*       target )
+  {
+    return FT_Err_Unimplemented_Feature;
+  }
 
   /* documentation is in freetype.h */
 

@@ -652,12 +652,13 @@
     sizeof ( TT_SizeRec ),
     sizeof ( FT_GlyphSlotRec ),
 
-    tt_face_init,               /* FT_Face_InitFunc  init_face */
-    tt_face_done,               /* FT_Face_DoneFunc  done_face */
-    tt_size_init,               /* FT_Size_InitFunc  init_size */
-    tt_size_done,               /* FT_Size_DoneFunc  done_size */
-    tt_slot_init,               /* FT_Slot_InitFunc  init_slot */
-    NULL,                       /* FT_Slot_DoneFunc  done_slot */
+    tt_face_init,               /* FT_Face_InitFunc   init_face */
+    tt_face_clone,              /* FT_Face_CloneFunc  clone_face */
+    tt_face_done,               /* FT_Face_DoneFunc   done_face */
+    tt_size_init,               /* FT_Size_InitFunc   init_size */
+    tt_size_done,               /* FT_Size_DoneFunc   done_size */
+    tt_slot_init,               /* FT_Slot_InitFunc   init_slot */
+    NULL,                       /* FT_Slot_DoneFunc   done_slot */
 
     tt_glyph_load,              /* FT_Slot_LoadFunc  load_glyph */
 

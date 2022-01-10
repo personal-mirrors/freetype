@@ -234,12 +234,13 @@
     sizeof ( CID_SizeRec ),
     sizeof ( CID_GlyphSlotRec ),
 
-    cid_face_init,              /* FT_Face_InitFunc  init_face */
-    cid_face_done,              /* FT_Face_DoneFunc  done_face */
-    cid_size_init,              /* FT_Size_InitFunc  init_size */
-    cid_size_done,              /* FT_Size_DoneFunc  done_size */
-    cid_slot_init,              /* FT_Slot_InitFunc  init_slot */
-    cid_slot_done,              /* FT_Slot_DoneFunc  done_slot */
+    cid_face_init,              /* FT_Face_InitFunc   init_face */
+    cid_face_clone,             /* FT_Face_CloneFunc  clone_face */
+    cid_face_done,              /* FT_Face_DoneFunc   done_face */
+    cid_size_init,              /* FT_Size_InitFunc   init_size */
+    cid_size_done,              /* FT_Size_DoneFunc   done_size */
+    cid_slot_init,              /* FT_Slot_InitFunc   init_slot */
+    cid_slot_done,              /* FT_Slot_DoneFunc   done_slot */
 
     cid_slot_load_glyph,        /* FT_Slot_LoadFunc  load_glyph */
 

@@ -70,6 +70,11 @@ FT_BEGIN_HEADER
                  FT_Parameter*  params );
 
 
+  FT_LOCAL( FT_Error )
+  T42_Face_Clone( FT_Face   face,
+                  FT_Face*  target );
+
+
   FT_LOCAL( void )
   T42_Face_Done( FT_Face  face );
 

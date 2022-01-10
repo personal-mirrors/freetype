@@ -806,6 +806,14 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  tt_face_clone( FT_Face   ttface,          /* TT_Face */
+                 FT_Face*  target)
+  {
+    return FT_Err_Unimplemented_Feature;
+  }
+
+
   /**************************************************************************
    *
    * @Function:

@@ -2478,6 +2478,11 @@ FT_BEGIN_HEADER
                     FT_Open_Args*  parameters );
 
 
+  FT_EXPORT( FT_Error )
+  FT_Clone_Face( FT_Face   face,
+                 FT_Face*  target );
+
+
   /**************************************************************************
    *
    * @function:

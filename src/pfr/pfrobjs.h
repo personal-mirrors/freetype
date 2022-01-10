@@ -63,6 +63,10 @@ FT_BEGIN_HEADER
                  FT_Int         num_params,
                  FT_Parameter*  params );
 
+  FT_LOCAL( FT_Error )
+  pfr_face_clone( FT_Face   face,               /* PFR_Face */
+                  FT_Face*  target );
+
   FT_LOCAL( void )
   pfr_face_done( FT_Face  face );               /* PFR_Face */
 
