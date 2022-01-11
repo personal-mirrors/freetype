@@ -362,6 +362,10 @@ FT_BEGIN_HEADER
                  const FT_Open_Args*  args,
                  FT_Stream           *astream );
 
+  FT_BASE( FT_Error )
+  FT_Stream_Clone( FT_Stream   stream,
+                   FT_Stream*  target )
+
   /* free a stream */
   FT_BASE( void )
   FT_Stream_Free( FT_Stream  stream,
