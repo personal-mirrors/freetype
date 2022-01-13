@@ -2921,6 +2921,48 @@
     return error;
   }
 
+
+  static FT_Error
+  clone_face_internal( FT_Face  face )
+  {
+    FT_Error          error;
+    FT_Memory         memory;
+    FT_Face_Internal  internal;
+    FT_Face_Internal  clone;
+
+    memory = face->stream->memory;
+    internal = face->internal;
+
+    if ( FT_NEW(clone) )
+      goto Fail;
+
+    clone->transform_matrix = internal->transform_matrix;
+    clone->transform_delta  = internal->transform_delta;
+    clone->transform_flags  = internal->transform_flags;
+
+    clone->services = internal->services;
+
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    clone->incremental_interface = internal->incremental_interface;
+#endif
+
+    clone->no_stem_darkening = internal->no_stem_darkening;
+    clone->random_seed       = internal->random_seed;
+
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+    ft_memcpy( clone->lcd_weights,
+               internal->lcd_weights,
+               FT_LCD_FILTER_FIVE_TAPS );
+    clone->lcd_filter_func = internal->lcd_filter_func;
+#endif
+
+    clone->refcount = 1;
+
+  Fail:
+    return error;
+  }
+
+
   FT_EXPORT( FT_Error )
   FT_Clone_Face( FT_Face  face,
                  FT_Face*       target )
