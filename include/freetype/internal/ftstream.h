@@ -364,7 +364,7 @@ FT_BEGIN_HEADER
 
   FT_BASE( FT_Error )
   FT_Stream_Clone( FT_Stream   stream,
-                   FT_Stream*  target )
+                   FT_Stream*  target );
 
   /* free a stream */
   FT_BASE( void )
