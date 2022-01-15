@@ -2923,7 +2923,8 @@
 
 
   static FT_Error
-  clone_face_internal( FT_Face  face )
+  clone_face_internal( FT_Face            face,
+                       FT_Face_Internal*  target )
   {
     FT_Error          error;
     FT_Memory         memory;
@@ -2958,16 +2959,104 @@
 
     clone->refcount = 1;
 
+    *target = clone;
+
   Fail:
     return error;
   }
 
 
-  FT_EXPORT( FT_Error )
-  FT_Clone_Face( FT_Face  face,
-                 FT_Face*       target )
+  FT_EXPORT_DEF( FT_Error )
+  FT_Clone_Face( FT_Face   face,
+                 FT_Face*  target )
   {
-    return FT_Err_Unimplemented_Feature;
+    FT_Error   error;
+    FT_Memory  memory;
+    FT_Face    clone;
+
+    error = FT_ERR( Invalid_Face_Handle );
+    if ( !face )
+      goto Fail;
+
+    if ( FT_ALLOC( clone, face->driver->clazz->face_object_size ) )
+      goto Fail;
+
+    clone->num_faces  = face->num_faces;
+    clone->face_index = face->face_index;
+
+    clone->face_flags  = face->face_flags;
+    clone->style_flags = face->style_flags;
+
+    clone->num_glyphs = face->num_glyphs;
+
+    clone->family_name = face->family_name;
+    clone->style_name  = face->style_name;
+
+    clone->num_fixed_sizes = face->num_fixed_sizes;
+    clone->available_sizes = face->available_sizes;
+
+    clone->num_charmaps = face->num_charmaps;
+    clone->charmaps     = face->charmaps;
+
+    clone->generic.data      = NULL;
+    clone->generic.finalizer = NULL;
+
+    clone->bbox = face->bbox;
+
+    clone->units_per_EM = face->units_per_EM;
+    clone->ascender     = face->ascender;
+    clone->descender    = face->descender;
+    clone->height       = face->height;
+
+    clone->max_advance_width  = face->max_advance_width;
+    clone->max_advance_height = face->max_advance_height;
+
+    clone->underline_position  = face->underline_position;
+    clone->underline_thickness = face->underline_thickness;
+
+    clone->glyph   = NULL;
+    clone->size    = NULL;
+    clone->charmap = face->charmap;
+
+    clone->driver = face->driver;
+    clone->memory = face->memory;
+    clone->stream = face->stream;
+
+    clone->sizes_list.head = NULL;
+    clone->sizes_list.tail = NULL;
+
+    clone->autohint.data      = NULL;
+    clone->autohint.finalizer = NULL;
+
+    clone->extensions = NULL;
+
+    error = FT_New_GlyphSlot( clone, &clone->glyph );
+    if ( error )
+      goto Fail_Slot;
+
+    error = FT_New_Size( clone, &clone->size );
+    if ( error )
+      goto Fail_Size;
+
+    error = clone_face_internal( face, &clone->internal );
+    if ( error )
+      goto Fail_Internal;
+
+    *target = clone;
+
+    return FT_Err_Ok;
+
+  Fail_Internal:
+    FT_Done_Size( clone->size );
+
+  Fail_Size:
+    FT_Done_GlyphSlot( clone->glyph );
+
+  Fail_Slot:
+    FT_FREE( clone );
+
+  Fail:
+    return error;
   }
 
   /* documentation is in freetype.h */
