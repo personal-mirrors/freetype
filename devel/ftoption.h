@@ -524,6 +524,17 @@ FT_BEGIN_HEADER
    */
 #undef FT_CONFIG_OPTION_USE_MODULE_ERRORS
 
+  /**************************************************************************
+   *
+   * OpenType SVG Glyph Support
+   *
+   *   Setting this macro enables support for OpenType SVG glyphs.  By
+   *   default, FreeType can only fetch SVG documents.  It can also render
+   *   them if external rendering hook functions are plugged in at runtime.
+   *
+   *   More details on the hooks can be found in file `otsvg.h`.
+   */
+#define FT_CONFIG_OPTION_SVG
 
   /**************************************************************************
    *
@@ -1003,6 +1014,20 @@ FT_BEGIN_HEADER
     CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
 #error "Invalid CFF darkening parameters!"
 #endif
+
+
+  /*
+   * OpenType SVG support needs to use system Zlib to do the decompression
+   * as the internal Zlib is not capable of doing that because of being
+   * outdated.
+   */
+#if defined( FT2_BUILD_LIBRARY )              && \
+    defined( FT_CONFIG_OPTION_SVG )           && \
+    !defined( FT_CONFIG_OPTION_SYSTEM_ZLIB )
+#pragma message "External installation of ZLIB is needed"
+#pragma message "to support GZIP compressed SVG documents"
+#endif
+
 
 FT_END_HEADER
 
