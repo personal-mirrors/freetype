@@ -733,7 +733,9 @@
       }
 
       globals->blues.blue_shift = priv->blue_shift;
+      globals->blues.blue_threshold = 0;
       globals->blues.blue_fuzz  = priv->blue_fuzz;
+      globals->blues.no_overshoots = 0;
 
       globals->dimension[0].scale_mult  = 0;
       globals->dimension[0].scale_delta = 0;
