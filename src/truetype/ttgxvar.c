@@ -4337,6 +4337,117 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  tt_clone_blend( TT_Face    face,
+                  GX_Blend*  target )
+  {
+    FT_Error   error = FT_Err_Ok;
+    FT_Memory  memory;
+    GX_Blend   blend;
+    GX_Blend   clone;
+
+    memory = face->root.memory;
+    blend  = face->blend;
+    clone  = NULL;
+
+    if ( blend )
+    {
+      if ( FT_NEW( clone ) )
+        goto Exit;
+
+      clone->num_axis         = blend->num_axis;
+      clone->coords           = NULL;               /* Lazy, Mutable */
+      clone->normalizedcoords = NULL;               /* Lazy, Mutable */
+
+      clone->mmvar     = blend->mmvar;              /* Readonly, Immutable */
+      clone->mmvar_len = blend->mmvar_len;
+
+      clone->normalized_stylecoords = NULL;         /* Readonly, Mutable */
+
+      clone->avar_loaded  = FALSE;
+      clone->avar_segment = blend->avar_segment;    /* Lazy, Immutable */
+
+      clone->hvar_loaded  = FALSE;
+      clone->hvar_checked = FALSE;
+      clone->hvar_error   = FT_Err_Ok;
+      clone->hvar_table   = NULL;                   /* Lazy, Immutable */
+
+      clone->vvar_loaded  = FALSE;
+      clone->vvar_checked = FALSE;
+      clone->vvar_error   = FT_Err_Ok;
+      clone->vvar_table   = NULL;                   /* Lazy, Immutable */
+
+      clone->mvar_table = blend->mvar_table;        /* Readonly, Immutable */
+
+      clone->tuplecount  = blend->tuplecount;
+      clone->tuplecoords = NULL;                    /* Lazy, Immutable */
+
+      clone->gv_glyphcnt  = blend->gv_glyphcnt;
+      clone->glyphoffsets = NULL;                   /* Lazy, Immutable */
+
+      clone->gvar_size = blend->gvar_size;
+
+      if ( blend->coords )
+      {
+        FT_UInt  size = blend->mmvar->num_axis;
+
+        if ( FT_QNEW_ARRAY( clone->coords, size ) )
+          goto Exit;
+
+        FT_ARRAY_COPY( clone->coords, blend->coords, size );
+      }
+
+      if ( blend->normalizedcoords )
+      {
+        FT_UInt  size = blend->mmvar->num_axis;
+
+        if ( FT_QNEW_ARRAY( clone->normalizedcoords, size ) )
+          goto Exit;
+
+        FT_ARRAY_COPY( clone->normalizedcoords, blend->normalizedcoords, size );
+      }
+
+      if ( blend->normalized_stylecoords )
+      {
+        FT_MM_Var*  mmvar = blend->mmvar;
+        FT_UInt     size;
+        
+        size = mmvar->num_axis * mmvar->num_namedstyles;
+
+        if ( FT_QNEW_ARRAY( clone->normalized_stylecoords, size ) )
+          goto Exit;
+
+        FT_ARRAY_COPY( clone->normalized_stylecoords, blend->normalized_stylecoords, size );
+      }
+
+      if ( blend->tuplecoords )
+      {
+        FT_UInt  size = blend->mmvar->num_axis * blend->tuplecount;
+
+        if ( FT_QNEW_ARRAY( clone->tuplecoords, size ) )
+          goto Exit;
+
+        FT_ARRAY_COPY( clone->tuplecoords, blend->tuplecoords, size );
+      }
+
+      if ( blend->glyphoffsets )
+      {
+        FT_UInt  size = blend->gv_glyphcnt + 1;
+
+        if ( FT_QNEW_ARRAY( clone->glyphoffsets, size ) )
+          goto Exit;
+
+        FT_ARRAY_COPY( clone->glyphoffsets, blend->glyphoffsets, size );
+      }
+    }
+
+    *target = clone;
+
+  Exit:
+    return error;
+  }
+
+
   /**************************************************************************
    *
    * @Function:
