@@ -810,7 +810,194 @@
   tt_face_clone( FT_Face   ttface,          /* TT_Face */
                  FT_Face*  target)
   {
-    return FT_Err_Unimplemented_Feature;
+    FT_Error   error = FT_Err_Ok;
+    FT_Memory  memory;
+    TT_Face    face;
+    TT_Face    clone;
+
+    memory = ttface->memory;
+    face = (TT_Face)ttface;
+    clone = (TT_Face)*target;
+
+    clone->ttc_header = face->ttc_header;               /* Readonly, Immutable */
+
+    clone->format_tag = face->format_tag;
+    clone->num_tables = face->num_tables;
+    clone->dir_tables = face->dir_tables;               /* Readonly, Immutable */
+
+    clone->header     = face->header;
+    clone->horizontal = face->horizontal;               /* Readonly, Immutable */
+
+    clone->max_profile = face->max_profile;
+
+    clone->vertical_info = face->vertical_info;
+    clone->vertical      = face->vertical;              /* Readonly, Immutable */
+
+    clone->num_names  = face->num_names;
+    clone->name_table = face->name_table;               /* Readonly, Immutable */
+
+    clone->os2        = face->os2;
+    clone->postscript = face->postscript;
+
+    clone->cmap_table = face->cmap_table;
+    clone->cmap_size  = face->cmap_size;
+
+    clone->goto_table = face->goto_table;
+
+    clone->access_glyph_frame   = face->access_glyph_frame;
+    clone->forget_glyph_frame   = face->forget_glyph_frame;
+    clone->read_glyph_header    = face->read_glyph_header;
+    clone->read_simple_glyph    = face->read_simple_glyph;
+    clone->read_composite_glyph = face->read_composite_glyph;
+
+    clone->sfnt    = face->sfnt;                        /* Readonly, Immutable */
+    clone->psnames = face->psnames;                     /* Readonly, Immutable */
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    clone->mm  = face->mm;                              /* Readonly, Immutable */
+    clone->var = face->var;                             /* Readonly, Immutable */
+#endif
+
+    clone->psaux = face->psaux;                         /* Readonly, Immutable */
+
+    clone->gasp = face->gasp;
+
+    clone->pclt = face->pclt;
+
+    clone->num_sbit_scales = face->num_sbit_scales;
+    clone->sbit_scales     = face->sbit_scales;         /* Unused */
+
+    clone->postscript_names = face->postscript_names;   /* Readonly, Immutable */ 
+
+    clone->palette_data          = face->palette_data;  /* Readonly, Immutable */
+    clone->palette_index         = face->palette_index;
+    clone->palette               = NULL;                /* Readonly, Mutable */
+    clone->have_foreground_color = face->have_foreground_color;
+    clone->foreground_color      = face->foreground_color;
+
+    clone->font_program_size = face->font_program_size;
+    clone->font_program      = face->font_program;      /* Readonly, Immutable */
+
+    clone->cvt_program_size = face->cvt_program_size;
+    clone->cvt_program      = face->cvt_program;        /* Readonly, Immutable */
+
+    clone->cvt_size = face->cvt_size;
+    clone->cvt      = NULL;                             /* ReadWrite */
+
+    clone->interpreter = face->interpreter;
+
+    clone->extra.data      = face->extra.data;          /* Readonly, Immutable */
+    clone->extra.finalizer = NULL;                      /* Should be called from parent only. */
+
+    clone->postscript_name = NULL;                      /* ReadWrite */
+
+    clone->glyf_len    = face->glyf_len;
+    clone->glyf_offset = face->glyf_offset;
+
+    clone->is_cff2 = face->is_cff2;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    clone->doblend = face->doblend;
+    clone->blend   = NULL;                              /* Lazy, Mutable */
+
+    clone->variation_support = face->variation_support;
+
+    clone->var_postscript_prefix     = NULL;            /* Lazy, Immutable */
+    clone->var_postscript_prefix_len = face->var_postscript_prefix_len;
+#endif
+
+    clone->horz_metrics_size = face->horz_metrics_size;
+    clone->vert_metrics_size = face->vert_metrics_size;
+
+    clone->num_locations   = face->num_locations;
+    clone->glyph_locations = face->glyph_locations;     /* Readonly, Immutable */
+
+    clone->hdmx_table        = face->hdmx_table;        /* Readonly, Immutable */
+    clone->hdmx_table_size   = face->hdmx_table_size;
+    clone->hdmx_record_count = face->hdmx_record_count;
+    clone->hdmx_record_size  = face->hdmx_record_size;  
+    clone->hdmx_record_sizes = face->hdmx_record_sizes; /* Readonly, Immutable */
+
+    clone->sbit_table       = face->sbit_table;         /* Readonly, Immutable */
+    clone->sbit_table_size  = face->sbit_table_size;
+    clone->sbit_table_type  = face->sbit_table_type;
+    clone->sbit_num_strikes = face->sbit_num_strikes;
+    clone->sbit_strike_map  = face->sbit_strike_map;    /* Readonly, Immutable */
+
+    clone->kern_table      = face->kern_table;          /* Readonly, Immutable */
+    clone->kern_table_size = face->kern_table_size;
+    clone->num_kern_tables = face->num_kern_tables;
+    clone->kern_avail_bits = face->kern_avail_bits;
+    clone->kern_order_bits = face->kern_order_bits;
+
+#ifdef TT_CONFIG_OPTION_BDF
+ /* clone->bdf        = NULL; */                        /* Lazy, Immutable */
+    clone->bdf.loaded = 0;
+#endif
+
+    clone->horz_metrics_offset = face->horz_metrics_offset;
+    clone->vert_metrics_offset = face->vert_metrics_offset;
+
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+    clone->sph_found_func_flags   = face->sph_found_func_flags;
+    clone->sph_compatibility_mode = face->sph_compatibility_mode;
+#endif
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+    clone->ebdt_start = face->ebdt_start;
+    clone->ebdt_size  = face->ebdt_size;
+#endif
+
+    clone->cpal = face->cpal;
+    clone->colr = face->colr;
+
+    if ( FT_QNEW_ARRAY( clone->palette,
+                        face->palette_data.num_palette_entries ) )
+      goto Exit;
+
+    FT_ARRAY_COPY( clone->palette,
+                   face->palette,
+                   face->palette_data.num_palette_entries );
+
+    if ( face->cvt )
+    {
+      if ( FT_QALLOC( clone->cvt, face->cvt_size) )
+        goto Exit;
+
+      FT_MEM_COPY( clone->cvt, face->cvt, face->cvt_size );
+    }
+
+    if ( face->postscript_name )
+    {
+      FT_UInt  size = ft_strlen( face->postscript_name ) + 1;
+
+      if ( FT_QNEW_ARRAY( clone->postscript_name, size ) )
+        goto Exit;
+
+      FT_ARRAY_COPY( clone->postscript_name, face->postscript_name, size );
+    }
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    if ( face->blend )
+    {
+      error = tt_clone_blend( face, &clone->blend );
+      if ( error )
+        goto Exit;
+    }
+
+    if ( face->var_postscript_prefix )
+    {
+      FT_UInt  size = face->var_postscript_prefix_len + 1;
+
+      if ( FT_QNEW_ARRAY( clone->var_postscript_prefix, size ) )
+        goto Exit;
+
+      FT_ARRAY_COPY( clone->var_postscript_prefix, face->var_postscript_prefix, size );
+    }
+#endif
+
+  Exit:
+    return error;
   }
 
 
