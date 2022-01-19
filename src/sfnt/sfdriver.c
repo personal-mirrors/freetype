@@ -779,29 +779,28 @@
   };
 
 
-  static const char*
-  sfnt_get_var_ps_name( TT_Face  face )
+  static void
+  sfnt_load_var_postscript_prefix_if_needed( TT_Face face )
   {
-    FT_Error   error;
-    FT_Memory  memory = face->root.memory;
-
-    FT_Service_MultiMasters  mm = (FT_Service_MultiMasters)face->mm;
-
-    FT_UInt     num_coords;
-    FT_Fixed*   coords;
-    FT_MM_Var*  mm_var;
-
-    FT_Int   found, win, apple;
-    FT_UInt  i, j;
-
-    char*  result = NULL;
-    char*  p;
-
-
     if ( !face->var_postscript_prefix )
     {
+      TT_Face  parent = face->parent;
+
+      FT_Int   found, win, apple;
       FT_UInt  len;
 
+      char*  result = NULL;
+
+
+      if ( parent )
+      {
+        sfnt_load_var_postscript_prefix_if_needed( parent );
+
+        face->var_postscript_prefix     = parent->var_postscript_prefix;
+        face->var_postscript_prefix_len = parent->var_postscript_prefix_len;
+
+        return;
+      }
 
       /* check whether we have a Variations PostScript Name Prefix */
       found = sfnt_get_name_id( face,
@@ -830,9 +829,9 @@
 
       if ( !found )
       {
-        FT_TRACE0(( "sfnt_get_var_ps_name:"
+        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
                     " Can't construct PS name prefix for font instances\n" ));
-        return NULL;
+        return;
       }
 
       /* prefer Windows entries over Apple */
@@ -851,9 +850,9 @@
 
       if ( !result )
       {
-        FT_TRACE0(( "sfnt_get_var_ps_name:"
+        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
                     " No valid PS name prefix for font instances found\n" ));
-        return NULL;
+        return;
       }
 
       len = ft_strlen( result );
@@ -867,7 +866,7 @@
         len         = MAX_PS_NAME_LEN - ( 1 + 32 + 3 );
         result[len] = '\0';
 
-        FT_TRACE0(( "sfnt_get_var_ps_name:"
+        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
                     " Shortening variation PS name prefix\n" ));
         FT_TRACE0(( "                     "
                     " to %d characters\n", len ));
@@ -876,6 +875,28 @@
       face->var_postscript_prefix     = result;
       face->var_postscript_prefix_len = len;
     }
+  }
+
+
+  static const char*
+  sfnt_get_var_ps_name( TT_Face  face )
+  {
+    FT_Error   error;
+    FT_Memory  memory = face->root.memory;
+
+    FT_Service_MultiMasters  mm = (FT_Service_MultiMasters)face->mm;
+
+    FT_UInt     num_coords;
+    FT_Fixed*   coords;
+    FT_MM_Var*  mm_var;
+    
+    FT_UInt  i, j;
+
+    char*  result = NULL;
+    char*  p;
+
+
+    sfnt_load_var_postscript_prefix_if_needed( face );
 
     mm->get_var_blend( FT_FACE( face ),
                        &num_coords,

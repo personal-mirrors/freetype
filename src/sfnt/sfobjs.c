@@ -816,6 +816,8 @@
       }
     }
 
+    face->parent = NULL;
+
     /* Load tables */
 
     /* We now support two SFNT-based bitmapped font formats.  They */
@@ -1484,7 +1486,8 @@
     FT_FREE( face->postscript_name );
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    FT_FREE( face->var_postscript_prefix );
+    if ( !face->parent )
+      FT_FREE( face->var_postscript_prefix );
 #endif
 
     /* freeing glyph color palette data */

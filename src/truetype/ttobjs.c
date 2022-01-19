@@ -907,7 +907,7 @@
 
     clone->variation_support = face->variation_support;
 
-    clone->var_postscript_prefix     = NULL;            /* Lazy, Immutable */
+    clone->var_postscript_prefix     = face->var_postscript_prefix;     /* Lazy, Immutable */
     clone->var_postscript_prefix_len = face->var_postscript_prefix_len;
 #endif
 
@@ -988,16 +988,6 @@
       error = tt_clone_blend( face, &clone->blend );
       if ( error )
         goto Exit;
-    }
-
-    if ( face->var_postscript_prefix )
-    {
-      FT_UInt  size = face->var_postscript_prefix_len + 1;
-
-      if ( FT_QNEW_ARRAY( clone->var_postscript_prefix, size ) )
-        goto Exit;
-
-      FT_ARRAY_COPY( clone->var_postscript_prefix, face->var_postscript_prefix, size );
     }
 #endif
 
