@@ -1463,6 +1463,8 @@ FT_BEGIN_HEADER
   {
     FT_FaceRec            root;
 
+    TT_Face               parent;
+
     TTC_HeaderRec         ttc_header;
 
     FT_ULong              format_tag;

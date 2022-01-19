@@ -819,6 +819,11 @@
     face = (TT_Face)ttface;
     clone = (TT_Face)*target;
 
+    if ( face->parent )
+      clone->parent = face->parent;
+    else
+      clone->parent = face;
+
     clone->ttc_header = face->ttc_header;               /* Readonly, Immutable */
 
     clone->format_tag = face->format_tag;
