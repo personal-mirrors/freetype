@@ -794,7 +794,8 @@
 
       if ( parent )
       {
-        sfnt_load_var_postscript_prefix_if_needed( parent );
+        if ( !parent->var_postscript_prefix )
+          sfnt_load_var_postscript_prefix_if_needed( parent );
 
         face->var_postscript_prefix     = parent->var_postscript_prefix;
         face->var_postscript_prefix_len = parent->var_postscript_prefix_len;
