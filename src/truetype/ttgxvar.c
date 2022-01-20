@@ -833,6 +833,7 @@
   ft_var_load_hvvar( TT_Face  face,
                      FT_Bool  vertical )
   {
+    TT_Face    parent = face->parent;
     FT_Stream  stream = FT_FACE_STREAM( face );
     FT_Memory  memory = stream->memory;
 
@@ -847,6 +848,38 @@
     FT_ULong   store_offset;
     FT_ULong   widthMap_offset;
 
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+      if ( vertical )
+      {
+        if ( !source->vvar_loaded )
+        {
+          error = ft_var_load_hvvar( parent, vertical );
+          if ( error )
+            goto Exit;
+        }
+
+        blend->vvar_loaded  = source->vvar_loaded;
+        blend->vvar_table   = source->vvar_table;
+      }
+      else
+      {
+        if ( !source->hvar_loaded )
+        {
+          error = ft_var_load_hvvar( parent, vertical );
+          if ( error )
+            goto Exit;
+        }
+
+        blend->hvar_loaded  = source->hvar_loaded;
+        blend->hvar_table   = source->hvar_table;
+      }
+
+      goto Exit;
+    }
 
     if ( vertical )
     {
@@ -4381,15 +4414,15 @@
       clone->avar_loaded  = blend->avar_loaded;
       clone->avar_segment = blend->avar_segment;    /* Lazy, Immutable */
 
-      clone->hvar_loaded  = FALSE;
-      clone->hvar_checked = FALSE;
-      clone->hvar_error   = FT_Err_Ok;
-      clone->hvar_table   = NULL;                   /* Lazy, Immutable */
+      clone->hvar_loaded  = blend->hvar_loaded;
+      clone->hvar_checked = blend->hvar_checked;
+      clone->hvar_error   = blend->hvar_error;
+      clone->hvar_table   = blend->hvar_table;      /* Lazy, Immutable */
 
-      clone->vvar_loaded  = FALSE;
-      clone->vvar_checked = FALSE;
-      clone->vvar_error   = FT_Err_Ok;
-      clone->vvar_table   = NULL;                   /* Lazy, Immutable */
+      clone->vvar_loaded  = blend->vvar_loaded;
+      clone->vvar_checked = blend->vvar_checked;
+      clone->vvar_error   = blend->vvar_error;
+      clone->vvar_table   = blend->vvar_table;      /* Lazy, Immutable */
 
       clone->mvar_table = blend->mvar_table;        /* Readonly, Immutable */
 
@@ -4498,7 +4531,7 @@
         FT_FREE( blend->avar_segment );
       }
 
-      if ( blend->hvar_table )
+      if ( !parent && blend->hvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->hvar_table->itemStore );
@@ -4508,7 +4541,7 @@
         FT_FREE( blend->hvar_table );
       }
 
-      if ( blend->vvar_table )
+      if ( !parent && blend->vvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->vvar_table->itemStore );
