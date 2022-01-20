@@ -4460,7 +4460,7 @@
         FT_UInt  size = blend->mmvar->num_axis;
 
         if ( FT_QNEW_ARRAY( clone->coords, size ) )
-          goto Exit;
+          goto Fail;
 
         FT_ARRAY_COPY( clone->coords, blend->coords, size );
       }
@@ -4470,7 +4470,7 @@
         FT_UInt  size = blend->mmvar->num_axis;
 
         if ( FT_QNEW_ARRAY( clone->normalizedcoords, size ) )
-          goto Exit;
+          goto Fail;
 
         FT_ARRAY_COPY( clone->normalizedcoords, blend->normalizedcoords, size );
       }
@@ -4483,13 +4483,20 @@
         size = mmvar->num_axis * mmvar->num_namedstyles;
 
         if ( FT_QNEW_ARRAY( clone->normalized_stylecoords, size ) )
-          goto Exit;
+          goto Fail;
 
         FT_ARRAY_COPY( clone->normalized_stylecoords, blend->normalized_stylecoords, size );
       }
     }
 
     *target = clone;
+    goto Exit;
+
+  Fail:
+    FT_FREE( clone->normalized_stylecoords );
+    FT_FREE( clone->normalizedcoords );
+    FT_FREE( clone->coords );
+    FT_FREE( clone );
 
   Exit:
     return error;
