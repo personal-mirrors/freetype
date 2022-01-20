@@ -958,7 +958,7 @@
 
     if ( FT_QNEW_ARRAY( clone->palette,
                         face->palette_data.num_palette_entries ) )
-      goto Exit;
+      goto Fail;
 
     FT_ARRAY_COPY( clone->palette,
                    face->palette,
@@ -967,7 +967,7 @@
     if ( face->cvt )
     {
       if ( FT_QALLOC( clone->cvt, face->cvt_size) )
-        goto Exit;
+        goto Fail;
 
       FT_MEM_COPY( clone->cvt, face->cvt, face->cvt_size );
     }
@@ -977,7 +977,7 @@
       FT_UInt  size = ft_strlen( face->postscript_name ) + 1;
 
       if ( FT_QNEW_ARRAY( clone->postscript_name, size ) )
-        goto Exit;
+        goto Fail;
 
       FT_ARRAY_COPY( clone->postscript_name, face->postscript_name, size );
     }
@@ -987,9 +987,17 @@
     {
       error = tt_clone_blend( face, &clone->blend );
       if ( error )
-        goto Exit;
+        goto Fail;
     }
 #endif
+
+  goto Exit;
+
+  Fail:
+    FT_FREE( clone->palette );
+    FT_FREE( clone->cvt );
+    FT_FREE( clone->postscript_name );
+    FT_FREE( clone->blend );
 
   Exit:
     return error;
