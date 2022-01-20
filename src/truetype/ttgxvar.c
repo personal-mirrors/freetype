@@ -4523,7 +4523,9 @@
       FT_FREE( blend->coords );
       FT_FREE( blend->normalizedcoords );
       FT_FREE( blend->normalized_stylecoords );
-      FT_FREE( blend->mmvar );
+
+      if ( !parent )
+        FT_FREE( blend->mmvar );
 
       if ( !parent && blend->avar_segment )
       {
@@ -4552,7 +4554,7 @@
         FT_FREE( blend->vvar_table );
       }
 
-      if ( blend->mvar_table )
+      if ( !parent && blend->mvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->mvar_table->itemStore );
