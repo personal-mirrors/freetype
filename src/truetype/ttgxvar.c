@@ -1585,6 +1585,7 @@
   static FT_Error
   ft_var_load_gvar( TT_Face  face )
   {
+    TT_Face       parent = face->parent;
     FT_Stream     stream = FT_FACE_STREAM( face );
     FT_Memory     memory = stream->memory;
     GX_Blend      blend  = face->blend;
@@ -1595,6 +1596,26 @@
     FT_ULong      offsetToData;
     FT_ULong      offsets_len;
     GX_GVar_Head  gvar_head;
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+      if ( !source->glyphoffsets )
+      {
+        error = ft_var_load_gvar( parent );
+        if ( error )
+          goto Exit;
+      }
+
+      blend->tuplecount   = source->tuplecount;
+      blend->tuplecoords  = source->tuplecoords;
+      blend->gv_glyphcnt  = source->gv_glyphcnt;
+      blend->glyphoffsets = source->glyphoffsets;
+      blend->gvar_size    = source->gvar_size;
+
+      goto Exit;
+    }
 
     static const FT_Frame_Field  gvar_fields[] =
     {
@@ -4427,10 +4448,10 @@
       clone->mvar_table = blend->mvar_table;        /* Readonly, Immutable */
 
       clone->tuplecount  = blend->tuplecount;
-      clone->tuplecoords = NULL;                    /* Lazy, Immutable */
+      clone->tuplecoords = blend->tuplecoords;      /* Lazy, Immutable */
 
       clone->gv_glyphcnt  = blend->gv_glyphcnt;
-      clone->glyphoffsets = NULL;                   /* Lazy, Immutable */
+      clone->glyphoffsets = blend->glyphoffsets;    /* Lazy, Immutable */
 
       clone->gvar_size = blend->gvar_size;
 
@@ -4465,26 +4486,6 @@
           goto Exit;
 
         FT_ARRAY_COPY( clone->normalized_stylecoords, blend->normalized_stylecoords, size );
-      }
-
-      if ( blend->tuplecoords )
-      {
-        FT_UInt  size = blend->mmvar->num_axis * blend->tuplecount;
-
-        if ( FT_QNEW_ARRAY( clone->tuplecoords, size ) )
-          goto Exit;
-
-        FT_ARRAY_COPY( clone->tuplecoords, blend->tuplecoords, size );
-      }
-
-      if ( blend->glyphoffsets )
-      {
-        FT_UInt  size = blend->gv_glyphcnt + 1;
-
-        if ( FT_QNEW_ARRAY( clone->glyphoffsets, size ) )
-          goto Exit;
-
-        FT_ARRAY_COPY( clone->glyphoffsets, blend->glyphoffsets, size );
       }
     }
 
@@ -4560,8 +4561,12 @@
         FT_FREE( blend->mvar_table );
       }
 
-      FT_FREE( blend->tuplecoords );
-      FT_FREE( blend->glyphoffsets );
+      if ( !parent )
+      {
+        FT_FREE( blend->tuplecoords );
+        FT_FREE( blend->glyphoffsets );
+      }
+
       FT_FREE( blend );
     }
   }
