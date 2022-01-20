@@ -353,6 +353,7 @@
   static void
   ft_var_load_avar( TT_Face  face )
   {
+    TT_Face         parent = face->parent;
     FT_Stream       stream = FT_FACE_STREAM( face );
     FT_Memory       memory = stream->memory;
     GX_Blend        blend  = face->blend;
@@ -363,6 +364,19 @@
     FT_Int          i, j;
     FT_ULong        table_len;
 
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+      if ( !source->avar_loaded )
+        ft_var_load_avar( parent );
+
+      blend->avar_loaded  = source->avar_loaded;
+      blend->avar_segment = source->avar_segment;
+
+      return;
+    }
 
     FT_TRACE2(( "AVAR " ));
 
@@ -4364,7 +4378,7 @@
 
       clone->normalized_stylecoords = NULL;         /* Readonly, Mutable */
 
-      clone->avar_loaded  = FALSE;
+      clone->avar_loaded  = blend->avar_loaded;
       clone->avar_segment = blend->avar_segment;    /* Lazy, Immutable */
 
       clone->hvar_loaded  = FALSE;
@@ -4459,6 +4473,7 @@
   FT_LOCAL_DEF( void )
   tt_done_blend( TT_Face  face )
   {
+    TT_Face    parent = face->parent;
     FT_Memory  memory = FT_FACE_MEMORY( face );
     GX_Blend   blend  = face->blend;
 
@@ -4476,7 +4491,7 @@
       FT_FREE( blend->normalized_stylecoords );
       FT_FREE( blend->mmvar );
 
-      if ( blend->avar_segment )
+      if ( !parent && blend->avar_segment )
       {
         for ( i = 0; i < num_axes; i++ )
           FT_FREE( blend->avar_segment[i].correspondence );
