@@ -2988,16 +2988,26 @@
   FT_Clone_Face( FT_Face   face,
                  FT_Face*  target )
   {
-    FT_Error   error;
-    FT_Memory  memory;
-    FT_Face    clone;
+    FT_Error         error;
+    FT_Driver_Class  clazz;
+    FT_Memory        memory;
+    FT_Face          clone;
 
     error = FT_ERR( Invalid_Face_Handle );
     if ( !face )
-      goto Fail;
+      goto Exit;
 
-    if ( FT_ALLOC( clone, face->driver->clazz->face_object_size ) )
-      goto Fail;
+    clazz  = face->driver->clazz;
+    memory = face->memory;
+
+    if ( !clazz->clone_face )
+    {
+      error = FT_ERR( Unimplemented_Feature );
+      goto Exit;
+    }
+
+    if ( FT_ALLOC( clone, clazz->face_object_size ) )
+      goto Exit;
 
     clone->num_faces  = face->num_faces;
     clone->face_index = face->face_index;
@@ -3048,9 +3058,13 @@
 
     clone->extensions = NULL;
 
+    error = clazz->clone_face( face, clone );
+    if ( error )
+      goto Fail;
+
     error = FT_New_GlyphSlot( clone, &clone->glyph );
     if ( error )
-      goto Fail_Slot;
+      goto Fail;
 
     error = FT_New_Size( clone, &clone->size );
     if ( error )
@@ -3061,8 +3075,7 @@
       goto Fail_Internal;
 
     *target = clone;
-
-    return FT_Err_Ok;
+    goto Exit;
 
   Fail_Internal:
     FT_Done_Size( clone->size );
@@ -3070,10 +3083,10 @@
   Fail_Size:
     FT_Done_GlyphSlot( clone->glyph );
 
-  Fail_Slot:
+  Fail:
     FT_FREE( clone );
 
-  Fail:
+  Exit:
     return error;
   }
 
