@@ -1143,13 +1143,13 @@
     sizeof ( CFF_SizeRec ),
     sizeof ( CFF_GlyphSlotRec ),
 
-    cff_face_init,              /* FT_Face_InitFunc   init_face */
-    NULL,                       /* FT_Face_CloneFunc  clone_face */
-    cff_face_done,              /* FT_Face_DoneFunc   done_face */
-    cff_size_init,              /* FT_Size_InitFunc   init_size */
-    cff_size_done,              /* FT_Size_DoneFunc   done_size */
-    cff_slot_init,              /* FT_Slot_InitFunc   init_slot */
-    cff_slot_done,              /* FT_Slot_DoneFunc   done_slot */
+    cff_face_init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
+    cff_face_done,              /* FT_Face_DoneFunc  done_face */
+    cff_size_init,              /* FT_Size_InitFunc  init_size */
+    cff_size_done,              /* FT_Size_DoneFunc  done_size */
+    cff_slot_init,              /* FT_Slot_InitFunc  init_slot */
+    cff_slot_done,              /* FT_Slot_DoneFunc  done_slot */
 
     cff_glyph_load,             /* FT_Slot_LoadFunc  load_glyph */
 

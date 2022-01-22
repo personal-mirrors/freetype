@@ -3000,7 +3000,7 @@
     clazz  = face->driver->clazz;
     memory = face->memory;
 
-    if ( !clazz->clone_face )
+    if ( !clazz->copy_face )
     {
       error = FT_ERR( Unimplemented_Feature );
       goto Exit;
@@ -3058,7 +3058,7 @@
 
     clone->extensions = NULL;
 
-    error = clazz->clone_face( face, clone );
+    error = clazz->copy_face( face, clone );
     if ( error )
       goto Fail;
 

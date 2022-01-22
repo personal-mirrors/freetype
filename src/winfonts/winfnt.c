@@ -1190,13 +1190,13 @@
     sizeof ( FT_SizeRec ),
     sizeof ( FT_GlyphSlotRec ),
 
-    FNT_Face_Init,              /* FT_Face_InitFunc   init_face */
-    NULL,                       /* FT_Face_CloneFunc  clone_face */
-    FNT_Face_Done,              /* FT_Face_DoneFunc   done_face */
-    NULL,                       /* FT_Size_InitFunc   init_size */
-    NULL,                       /* FT_Size_DoneFunc   done_size */
-    NULL,                       /* FT_Slot_InitFunc   init_slot */
-    NULL,                       /* FT_Slot_DoneFunc   done_slot */
+    FNT_Face_Init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
+    FNT_Face_Done,              /* FT_Face_DoneFunc  done_face */
+    NULL,                       /* FT_Size_InitFunc  init_size */
+    NULL,                       /* FT_Size_DoneFunc  done_size */
+    NULL,                       /* FT_Slot_InitFunc  init_slot */
+    NULL,                       /* FT_Slot_DoneFunc  done_slot */
 
     FNT_Load_Glyph,             /* FT_Slot_LoadFunc  load_glyph */
 

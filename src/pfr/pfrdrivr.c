@@ -191,13 +191,13 @@
     sizeof ( PFR_SizeRec ),
     sizeof ( PFR_SlotRec ),
 
-    pfr_face_init,              /* FT_Face_InitFunc   init_face */
-    NULL,                       /* FT_Face_CloneFunc  clone_face */
-    pfr_face_done,              /* FT_Face_DoneFunc   done_face */
-    NULL,                       /* FT_Size_InitFunc   init_size */
-    NULL,                       /* FT_Size_DoneFunc   done_size */
-    pfr_slot_init,              /* FT_Slot_InitFunc   init_slot */
-    pfr_slot_done,              /* FT_Slot_DoneFunc   done_slot */
+    pfr_face_init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
+    pfr_face_done,              /* FT_Face_DoneFunc  done_face */
+    NULL,                       /* FT_Size_InitFunc  init_size */
+    NULL,                       /* FT_Size_DoneFunc  done_size */
+    pfr_slot_init,              /* FT_Slot_InitFunc  init_slot */
+    pfr_slot_done,              /* FT_Slot_DoneFunc  done_slot */
 
     pfr_slot_load,              /* FT_Slot_LoadFunc  load_glyph */
 

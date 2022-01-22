@@ -35,8 +35,8 @@ FT_BEGIN_HEADER
                        FT_Parameter*  parameters );
 
   typedef FT_Error
-  (*FT_Face_CloneFunc)( FT_Face  face,
-                        FT_Face  target);
+  (*FT_Face_CopyFunc)( FT_Face  face,
+                       FT_Face  target);
 
   typedef void
   (*FT_Face_DoneFunc)( FT_Face  face );
@@ -174,7 +174,7 @@ FT_BEGIN_HEADER
     FT_Long                  slot_object_size;
 
     FT_Face_InitFunc         init_face;
-    FT_Face_CloneFunc        clone_face;
+    FT_Face_CopyFunc         copy_face;
     FT_Face_DoneFunc         done_face;
 
     FT_Size_InitFunc         init_size;
@@ -237,7 +237,7 @@ FT_BEGIN_HEADER
           size_object_size_,                 \
           slot_object_size_,                 \
           init_face_,                        \
-          clone_face_,                       \
+          copy_face_,                        \
           done_face_,                        \
           init_size_,                        \
           done_size_,                        \
@@ -267,7 +267,7 @@ FT_BEGIN_HEADER
     slot_object_size_,                       \
                                              \
     init_face_,                              \
-    clone_face_,                              \
+    copy_face_,                              \
     done_face_,                              \
                                              \
     init_size_,                              \

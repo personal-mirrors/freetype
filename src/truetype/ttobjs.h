@@ -361,8 +361,8 @@ FT_BEGIN_HEADER
                 FT_Parameter*  params );
 
   FT_LOCAL( FT_Error )
-  tt_face_clone( FT_Face  ttface,           /* TT_Face */
-                 FT_Face  target );         /* TT_Face */
+  tt_face_copy( FT_Face  ttface,            /* TT_Face */
+                FT_Face  target );          /* TT_Face */
 
   FT_LOCAL( void )
   tt_face_done( FT_Face  ttface );          /* TT_Face */

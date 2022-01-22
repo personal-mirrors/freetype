@@ -771,13 +771,13 @@
     sizeof ( T1_SizeRec ),
     sizeof ( T1_GlyphSlotRec ),
 
-    T1_Face_Init,               /* FT_Face_InitFunc   init_face */
-    NULL,                       /* FT_Face_CloneFunc  clone_face */
-    T1_Face_Done,               /* FT_Face_DoneFunc   done_face */
-    T1_Size_Init,               /* FT_Size_InitFunc   init_size */
-    T1_Size_Done,               /* FT_Size_DoneFunc   done_size */
-    T1_GlyphSlot_Init,          /* FT_Slot_InitFunc   init_slot */
-    T1_GlyphSlot_Done,          /* FT_Slot_DoneFunc   done_slot */
+    T1_Face_Init,               /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
+    T1_Face_Done,               /* FT_Face_DoneFunc  done_face */
+    T1_Size_Init,               /* FT_Size_InitFunc  init_size */
+    T1_Size_Done,               /* FT_Size_DoneFunc  done_size */
+    T1_GlyphSlot_Init,          /* FT_Slot_InitFunc  init_slot */
+    T1_GlyphSlot_Done,          /* FT_Slot_DoneFunc  done_slot */
 
     T1_Load_Glyph,              /* FT_Slot_LoadFunc  load_glyph */
 
