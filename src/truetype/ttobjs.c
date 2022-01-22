@@ -855,15 +855,15 @@
     clone->read_simple_glyph    = face->read_simple_glyph;
     clone->read_composite_glyph = face->read_composite_glyph;
 
-    clone->sfnt    = face->sfnt;                        /* Readonly, Immutable */
-    clone->psnames = face->psnames;                     /* Readonly, Immutable */
+    clone->sfnt    = face->sfnt;                        /* Static */
+    clone->psnames = face->psnames;                     /* Static */
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    clone->mm  = face->mm;                              /* Readonly, Immutable */
-    clone->var = face->var;                             /* Readonly, Immutable */
+    clone->mm  = face->mm;                              /* Static */
+    clone->var = face->var;                             /* Static */
 #endif
 
-    clone->psaux = face->psaux;                         /* Readonly, Immutable */
+    clone->psaux = face->psaux;                         /* Static */
 
     clone->gasp = face->gasp;
 
@@ -872,7 +872,7 @@
     clone->num_sbit_scales = face->num_sbit_scales;
     clone->sbit_scales     = face->sbit_scales;         /* Unused */
 
-    clone->postscript_names = face->postscript_names;   /* Readonly, Immutable */ 
+    clone->postscript_names = face->postscript_names;   /* Lazy, Immutable */ 
 
     clone->palette_data          = face->palette_data;  /* Readonly, Immutable */
     clone->palette_index         = face->palette_index;
@@ -921,7 +921,7 @@
     clone->hdmx_table_size   = face->hdmx_table_size;
     clone->hdmx_record_count = face->hdmx_record_count;
     clone->hdmx_record_size  = face->hdmx_record_size;  
-    clone->hdmx_record_sizes = face->hdmx_record_sizes; /* Readonly, Immutable */
+    clone->hdmx_records      = face->hdmx_records;      /* Readonly, Immutable */
 
     clone->sbit_table       = face->sbit_table;         /* Readonly, Immutable */
     clone->sbit_table_size  = face->sbit_table_size;
@@ -953,8 +953,8 @@
     clone->ebdt_size  = face->ebdt_size;
 #endif
 
-    clone->cpal = face->cpal;
-    clone->colr = face->colr;
+    clone->cpal = face->cpal;                           /* Readonly, Immutable */
+    clone->colr = face->colr;                           /* Readonly, Immutable */
 
     if ( FT_QNEW_ARRAY( clone->palette,
                         face->palette_data.num_palette_entries ) )
@@ -1049,8 +1049,12 @@
     face->cvt_size = 0;
 
     /* freeing the programs */
-    FT_FRAME_RELEASE( face->font_program );
-    FT_FRAME_RELEASE( face->cvt_program );
+    if ( !face->parent )
+    {
+      FT_FRAME_RELEASE( face->font_program );
+      FT_FRAME_RELEASE( face->cvt_program );
+    }
+
     face->font_program_size = 0;
     face->cvt_program_size  = 0;
 

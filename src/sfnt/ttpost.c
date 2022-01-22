@@ -370,11 +370,19 @@
   static FT_Error
   load_post_names( TT_Face  face )
   {
+    TT_Face    parent = face->parent;
     FT_Stream  stream;
     FT_Error   error;
     FT_Fixed   format;
     FT_ULong   post_len;
 
+    if ( parent )
+    {
+      if ( !parent->postscript_names.loaded )
+        load_post_names( parent );
+
+      face->postscript_names = parent->postscript_names;
+    }
 
     /* get a stream for the face's resource */
     stream = face->root.stream;
@@ -413,7 +421,7 @@
     FT_Fixed       format;
 
 
-    if ( names->loaded )
+    if ( !face->parent && names->loaded )
     {
       format = face->postscript.FormatType;
 

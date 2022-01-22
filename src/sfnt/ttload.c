@@ -1039,11 +1039,11 @@
   FT_LOCAL_DEF( void )
   tt_face_free_name( TT_Face  face )
   {
+    FT_Face       parent = face->parent;
     FT_Memory     memory = face->root.driver->root.memory;
     TT_NameTable  table  = &face->name_table;
 
-
-    if ( table->names )
+    if ( !parent && table->names )
     {
       TT_Name  entry = table->names;
       TT_Name  limit = entry + table->numNameRecords;
@@ -1055,7 +1055,7 @@
       FT_FREE( table->names );
     }
 
-    if ( table->langTags )
+    if ( !parent && table->langTags )
     {
       TT_LangTag  entry = table->langTags;
       TT_LangTag  limit = entry + table->numLangTagRecords;

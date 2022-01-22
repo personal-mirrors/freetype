@@ -270,7 +270,7 @@
     Colr*  colr = (Colr*)face->colr;
 
 
-    if ( colr )
+    if ( !face->parent && colr )
     {
       FT_FRAME_RELEASE( colr->table );
       FT_FREE( colr );

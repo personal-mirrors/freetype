@@ -173,8 +173,9 @@
   {
     FT_Stream  stream = face->root.stream;
 
+    if ( !face->parent )
+      FT_FRAME_RELEASE( face->kern_table );
 
-    FT_FRAME_RELEASE( face->kern_table );
     face->kern_table_size = 0;
     face->num_kern_tables = 0;
     face->kern_avail_bits = 0;

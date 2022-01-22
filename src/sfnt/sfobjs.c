@@ -1396,6 +1396,7 @@
   FT_LOCAL_DEF( void )
   sfnt_done_face( TT_Face  face )
   {
+    TT_Face       parent;
     FT_Memory     memory;
     SFNT_Service  sfnt;
 
@@ -1403,6 +1404,7 @@
     if ( !face )
       return;
 
+    parent = face->parent;
     memory = face->root.memory;
     sfnt   = (SFNT_Service)face->sfnt;
 
@@ -1439,11 +1441,15 @@
     tt_face_done_kern( face );
 
     /* freeing the collection table */
-    FT_FREE( face->ttc_header.offsets );
+    if ( !parent )
+      FT_FREE( face->ttc_header.offsets );
+
     face->ttc_header.count = 0;
 
     /* freeing table directory */
-    FT_FREE( face->dir_tables );
+    if ( !parent )
+      FT_FREE( face->dir_tables );
+
     face->num_tables = 0;
 
     {
@@ -1461,8 +1467,12 @@
     /* freeing vertical metrics, if any */
     if ( face->vertical_info )
     {
-      FT_FREE( face->vertical.long_metrics  );
-      FT_FREE( face->vertical.short_metrics );
+      if ( !parent )
+      {
+        FT_FREE( face->vertical.long_metrics  );
+        FT_FREE( face->vertical.short_metrics );
+      }
+
       face->vertical_info = 0;
     }
 
@@ -1479,21 +1489,29 @@
     FT_FREE( face->root.style_name );
 
     /* freeing sbit size table */
-    FT_FREE( face->root.available_sizes );
-    FT_FREE( face->sbit_strike_map );
+    if ( !parent )
+    {
+      FT_FREE( face->root.available_sizes );
+      FT_FREE( face->sbit_strike_map );
+    }
+
     face->root.num_fixed_sizes = 0;
 
     FT_FREE( face->postscript_name );
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    if ( !face->parent )
+    if ( !parent )
       FT_FREE( face->var_postscript_prefix );
 #endif
 
     /* freeing glyph color palette data */
-    FT_FREE( face->palette_data.palette_name_ids );
-    FT_FREE( face->palette_data.palette_flags );
-    FT_FREE( face->palette_data.palette_entry_name_ids );
+    if ( !parent )
+    {
+      FT_FREE( face->palette_data.palette_name_ids );
+      FT_FREE( face->palette_data.palette_flags );
+      FT_FREE( face->palette_data.palette_entry_name_ids );
+    }
+
     FT_FREE( face->palette );
 
     face->sfnt = NULL;
