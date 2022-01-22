@@ -372,16 +372,17 @@
   {
     TT_Face    parent = face->parent;
     FT_Stream  stream;
-    FT_Error   error;
+    FT_Error   error = FT_Err_Ok;
     FT_Fixed   format;
     FT_ULong   post_len;
 
     if ( parent )
     {
       if ( !parent->postscript_names.loaded )
-        load_post_names( parent );
+        error = load_post_names( parent );
 
       face->postscript_names = parent->postscript_names;
+      goto Exit;
     }
 
     /* get a stream for the face's resource */

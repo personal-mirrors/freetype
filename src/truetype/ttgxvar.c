@@ -841,7 +841,7 @@
 
     GX_HVVarTable  table;
 
-    FT_Error   error;
+    FT_Error   error = FT_Err_Ok;
     FT_UShort  majorVersion;
     FT_ULong   table_len;
     FT_ULong   table_offset;
@@ -856,11 +856,7 @@
       if ( vertical )
       {
         if ( !source->vvar_loaded )
-        {
           error = ft_var_load_hvvar( parent, vertical );
-          if ( error )
-            goto Exit;
-        }
 
         blend->vvar_loaded  = source->vvar_loaded;
         blend->vvar_table   = source->vvar_table;
@@ -868,11 +864,7 @@
       else
       {
         if ( !source->hvar_loaded )
-        {
           error = ft_var_load_hvvar( parent, vertical );
-          if ( error )
-            goto Exit;
-        }
 
         blend->hvar_loaded  = source->hvar_loaded;
         blend->hvar_table   = source->hvar_table;
@@ -1589,7 +1581,7 @@
     FT_Stream     stream = FT_FACE_STREAM( face );
     FT_Memory     memory = stream->memory;
     GX_Blend      blend  = face->blend;
-    FT_Error      error;
+    FT_Error      error  = FT_Err_Ok;
     FT_UInt       i, j;
     FT_ULong      table_len;
     FT_ULong      gvar_start;
@@ -1602,11 +1594,7 @@
       GX_Blend  source = parent->blend;
 
       if ( !source->glyphoffsets )
-      {
         error = ft_var_load_gvar( parent );
-        if ( error )
-          goto Exit;
-      }
 
       blend->tuplecount   = source->tuplecount;
       blend->tuplecoords  = source->tuplecoords;
