@@ -1329,6 +1329,7 @@
   {
     FT_Driver_Class  clazz = driver->clazz;
 
+    FT_Face  parent = face->internal->parent;
 
     /* discard auto-hinting data */
     if ( face->autohint.finalizer )
@@ -1351,18 +1352,25 @@
       face->generic.finalizer( face );
 
     /* discard charmaps */
-    destroy_charmaps( face, memory );
+    if ( !parent )
+      destroy_charmaps( face, memory );
 
     /* finalize format-specific stuff */
     if ( clazz->done_face )
       clazz->done_face( face );
 
     /* close the stream for this face if needed */
-    FT_Stream_Free(
-      face->stream,
-      ( face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0 );
+    if ( !parent )
+    {
+      FT_Stream_Free(
+        face->stream,
+        ( face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0 );
+    }
 
     face->stream = NULL;
+
+    if ( parent )
+      FT_Done_Face( parent );
 
     /* get rid of it */
     if ( face->internal )
@@ -2813,6 +2821,7 @@
       internal->transform_delta.x = 0;
       internal->transform_delta.y = 0;
 
+      internal->parent   = NULL;
       internal->refcount = 1;
 
       internal->no_stem_darkening = -1;
@@ -2926,7 +2935,8 @@
   clone_face_internal( FT_Face            face,
                        FT_Face_Internal*  target )
   {
-    FT_Error          error;
+    FT_Error          error = FT_Err_Ok;
+    FT_Face           parent;
     FT_Memory         memory;
     FT_Face_Internal  internal;
     FT_Face_Internal  clone;
@@ -2935,7 +2945,7 @@
     internal = face->internal;
 
     if ( FT_NEW(clone) )
-      goto Fail;
+      goto Exit;
 
     clone->transform_matrix = internal->transform_matrix;
     clone->transform_delta  = internal->transform_delta;
@@ -2944,7 +2954,7 @@
     clone->services = internal->services;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    clone->incremental_interface = internal->incremental_interface;
+    clone->incremental_interface = internal->incremental_interface; /* Static */
 #endif
 
     clone->no_stem_darkening = internal->no_stem_darkening;
@@ -2957,11 +2967,19 @@
     clone->lcd_filter_func = internal->lcd_filter_func;
 #endif
 
+    if ( internal->parent )
+      parent = internal->parent;
+    else
+      parent = face;
+
+    FT_Reference_Face( parent );
+
+    clone->parent = parent;
     clone->refcount = 1;
 
     *target = clone;
 
-  Fail:
+  Exit:
     return error;
   }
 
@@ -2996,7 +3014,7 @@
     clone->available_sizes = face->available_sizes;
 
     clone->num_charmaps = face->num_charmaps;
-    clone->charmaps     = face->charmaps;
+    clone->charmaps     = face->charmaps;           /* Readonly, Immutable */
 
     clone->generic.data      = NULL;
     clone->generic.finalizer = NULL;
@@ -3014,9 +3032,9 @@
     clone->underline_position  = face->underline_position;
     clone->underline_thickness = face->underline_thickness;
 
-    clone->glyph   = NULL;
-    clone->size    = NULL;
-    clone->charmap = face->charmap;
+    clone->glyph   = NULL;                          /* ReadWrite, Mutable */
+    clone->size    = NULL;                          /* ReadWrite, Mutable */
+    clone->charmap = face->charmap;                 /* Static */
 
     clone->driver = face->driver;
     clone->memory = face->memory;

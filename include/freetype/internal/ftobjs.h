@@ -374,7 +374,8 @@ FT_BEGIN_HEADER
     FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
 #endif
 
-    FT_Int  refcount;
+    FT_Face  parent;
+    FT_Int   refcount;
 
   } FT_Face_InternalRec;
 
