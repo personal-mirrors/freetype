@@ -716,14 +716,6 @@
 
 
   static FT_Error
-  FNT_Face_Clone( FT_Face   fntface,            /* FNT_Face */
-                  FT_Face*  target )
-  {
-    return FT_Err_Unimplemented_Feature;
-  }
-
-
-  static FT_Error
   FNT_Face_Init( FT_Stream      stream,
                  FT_Face        fntface,        /* FNT_Face */
                  FT_Int         face_instance_index,
@@ -1199,7 +1191,7 @@
     sizeof ( FT_GlyphSlotRec ),
 
     FNT_Face_Init,              /* FT_Face_InitFunc   init_face */
-    FNT_Face_Clone,             /* FT_Face_CloneFunc  clone_face */
+    NULL,                       /* FT_Face_CloneFunc  clone_face */
     FNT_Face_Done,              /* FT_Face_DoneFunc   done_face */
     NULL,                       /* FT_Size_InitFunc   init_size */
     NULL,                       /* FT_Size_DoneFunc   done_size */

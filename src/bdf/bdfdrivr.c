@@ -346,14 +346,6 @@ THE SOFTWARE.
 
 
   FT_CALLBACK_DEF( FT_Error )
-  BDF_Face_Clone( FT_Face   bdfface,            /* BDF_Face */
-                  FT_Face*  target)
-  {
-      return FT_Err_Unimplemented_Feature;
-  }
-
-
-  FT_CALLBACK_DEF( FT_Error )
   BDF_Face_Init( FT_Stream      stream,
                  FT_Face        bdfface,        /* BDF_Face */
                  FT_Int         face_index,
@@ -1005,7 +997,7 @@ THE SOFTWARE.
     sizeof ( FT_GlyphSlotRec ),
 
     BDF_Face_Init,              /* FT_Face_InitFunc   init_face */
-    BDF_Face_Clone,             /* FT_Face_CloneFunc  clone_face */
+    NULL,                       /* FT_Face_CloneFunc  clone_face */
     BDF_Face_Done,              /* FT_Face_DoneFunc   done_face */
     NULL,                       /* FT_Size_InitFunc   init_size */
     NULL,                       /* FT_Size_DoneFunc   done_size */

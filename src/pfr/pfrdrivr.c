@@ -192,7 +192,7 @@
     sizeof ( PFR_SlotRec ),
 
     pfr_face_init,              /* FT_Face_InitFunc   init_face */
-    pfr_face_clone,             /* FT_Face_CloneFunc  clone_face */
+    NULL,                       /* FT_Face_CloneFunc  clone_face */
     pfr_face_done,              /* FT_Face_DoneFunc   done_face */
     NULL,                       /* FT_Size_InitFunc   init_size */
     NULL,                       /* FT_Size_DoneFunc   done_size */

@@ -65,14 +65,6 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  pfr_face_clone( FT_Face   pfrface,    /* PFR_Face */
-                  FT_Face*  target )
-  {
-    return FT_Err_Unimplemented_Feature;
-  }
-
-
-  FT_LOCAL_DEF( FT_Error )
   pfr_face_init( FT_Stream      stream,
                  FT_Face        pfrface,
                  FT_Int         face_index,

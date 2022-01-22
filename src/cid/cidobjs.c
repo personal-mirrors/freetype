@@ -258,14 +258,6 @@
   }
 
 
-  FT_LOCAL_DEF( FT_Error )
-  cid_face_clone( FT_Face   cidface,            /* CID_Face */
-                  FT_Face*  target)
-  {
-    return FT_Err_Unimplemented_Feature;
-  }
-
-
   /**************************************************************************
    *
    * @Function:

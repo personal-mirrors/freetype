@@ -278,14 +278,6 @@
   }
 
 
-  FT_LOCAL_DEF( FT_Error )
-  T1_Face_Clone( FT_Face   t1face,          /* T1_Face **/
-                 FT_Face*  target )
-  {
-    return FT_Err_Unimplemented_Feature;
-  }
-
-
   /**************************************************************************
    *
    * @Function:
