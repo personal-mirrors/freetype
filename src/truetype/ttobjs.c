@@ -966,10 +966,10 @@
 
     if ( face->cvt )
     {
-      if ( FT_QALLOC( clone->cvt, face->cvt_size) )
+      if ( FT_QNEW_ARRAY( clone->cvt, face->cvt_size) )
         goto Fail;
 
-      FT_MEM_COPY( clone->cvt, face->cvt, face->cvt_size );
+      FT_ARRAY_COPY( clone->cvt, face->cvt, face->cvt_size );
     }
 
     if ( face->postscript_name )
