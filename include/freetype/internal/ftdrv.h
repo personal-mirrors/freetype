@@ -35,8 +35,8 @@ FT_BEGIN_HEADER
                        FT_Parameter*  parameters );
 
   typedef FT_Error
-  (*FT_Face_CloneFunc)( FT_Face   face,
-                        FT_Face*  target);
+  (*FT_Face_CloneFunc)( FT_Face  face,
+                        FT_Face  target);
 
   typedef void
   (*FT_Face_DoneFunc)( FT_Face  face );

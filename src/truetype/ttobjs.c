@@ -807,8 +807,8 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_clone( FT_Face   ttface,          /* TT_Face */
-                 FT_Face*  target)
+  tt_face_clone( FT_Face  ttface,           /* TT_Face */
+                 FT_Face  target )          /* TT_Face */
   {
     FT_Error   error = FT_Err_Ok;
     FT_Memory  memory;
@@ -817,7 +817,7 @@
 
     memory = ttface->memory;
     face = (TT_Face)ttface;
-    clone = (TT_Face)*target;
+    clone = (TT_Face)target;
 
     if ( face->parent )
       clone->parent = face->parent;
