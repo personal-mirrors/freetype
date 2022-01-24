@@ -806,6 +806,25 @@
   }
 
 
+  /**************************************************************************
+   *
+   * @Function:
+   *   tt_face_copy
+   *
+   * @Description:
+   *   Copies a given TrueType face object into the target
+   *   TrueType face object.
+   *
+   * @Input:
+   *   ttface ::
+   *     The source TrueType face.
+   *
+   *   target ::
+   *     The destination TrueType face.
+   *
+   * @Return:
+   *   FreeType error code.  0 means success.
+   */
   FT_LOCAL_DEF( FT_Error )
   tt_face_copy( FT_Face  ttface,            /* TT_Face */
                 FT_Face  target )           /* TT_Face */

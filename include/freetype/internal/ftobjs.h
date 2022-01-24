@@ -348,6 +348,13 @@ FT_BEGIN_HEADER
    *     These fields specify the LCD filtering weights and callback function
    *     for ClearType-style subpixel rendering.
    *
+   *   parent ::
+   *     A handle to the parent @FT_Face object if this structure belongs to a
+   *     face that was created with @FT_Clone_Face. The cloned instance retains
+   *     the root @FT_Face object in this field because it borrows the
+   *     immutable objects from there. An immutable object refers to an
+   *     instance whose state does not change after being initialized.
+   *
    *   refcount ::
    *     A counter initialized to~1 at the time an @FT_Face structure is
    *     created.  @FT_Reference_Face increments this counter, and

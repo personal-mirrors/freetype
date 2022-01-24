@@ -2478,6 +2478,51 @@ FT_BEGIN_HEADER
                     FT_Open_Args*  parameters );
 
 
+  /**************************************************************************
+   *
+   * @function:
+   *   FT_Clone_Face
+   *
+   * @description:
+   *   Makes a copy of the specified face. It is ensured that the copied face
+   *   shares as much memory as possible with the parent face.
+   *
+   *   The output will be an exact copy of the source face leaving only glyph
+   *   slot and size objects which will always be new.
+   *
+   *   The cloning is format specific. If a font format does not support
+   *   cloning, it will throw `Unimplemented_Feature` error.
+   *
+   * @inout:
+   *   face ::
+   *     The source face object.
+   *
+   * @output:
+   *   target ::
+   *     A handle to a new face object. It must be non-`NULL`.
+   *
+   * @return:
+   *   FreeType error code.  0~means success.
+   *
+   * @note:
+   *   The cloned instance retains the root @FT_Face object because it borrows
+   *   the immutable objects from there. This means that if this function is
+   *   being called with a source face that is itself a clone, then the parent
+   *   of source face and the new face will be same.
+   *
+   *   The client is free to treat the cloned instance as any new face.
+   *
+   *   From thread safety perspective, a lock would need to be associated with
+   *   the root face or more precisely, the input stream. This is due the fact
+   *   that a single stream object can be used to open multiple faces. This
+   *   lock would need to be acquired whenever a client wants to mutate any
+   *   face associated with the input stream, including the distinct faces, the
+   *   parent face and the derived faces. An example of face mutation include
+   *   the call to @FT_Load_Glyph and similar API. And of course this lock
+   *   would only be needed when accessing any of the related face from
+   *   multiple threads.
+   *
+   */
   FT_EXPORT( FT_Error )
   FT_Clone_Face( FT_Face   face,
                  FT_Face*  target );
