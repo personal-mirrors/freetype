@@ -116,6 +116,9 @@ FT_BEGIN_HEADER
    *   init_face ::
    *     The format-specific face constructor.
    *
+   *   copy_face ::
+   *     The format-specific face copier.
+   *  
    *   done_face ::
    *     The format-specific face destructor.
    *

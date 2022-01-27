@@ -1160,6 +1160,9 @@ FT_BEGIN_HEADER
    * @fields:
    *   root ::
    *     The base FT_Face structure, managed by the base layer.
+   * 
+   *   parent ::
+   *     The parent TT_Face object.
    *
    *   ttc_header ::
    *     The TrueType collection header, used when the file is a 'ttc' rather

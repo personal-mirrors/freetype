@@ -2984,6 +2984,8 @@
   }
 
 
+  /* documentation is in freetype.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Clone_Face( FT_Face   face,
                  FT_Face*  target )
