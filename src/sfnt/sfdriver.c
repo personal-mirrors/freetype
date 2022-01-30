@@ -780,102 +780,99 @@
 
 
   static void
-  sfnt_load_var_postscript_prefix_if_needed( TT_Face face )
+  sfnt_load_var_postscript_prefix( TT_Face face )
   {
-    if ( !face->var_postscript_prefix )
+    TT_Face  parent = face->parent;
+
+    FT_Int   found, win, apple;
+    FT_UInt  len;
+
+    char*  result = NULL;
+
+
+    if ( parent )
     {
-      TT_Face  parent = face->parent;
+      if ( !parent->var_postscript_prefix )
+        sfnt_load_var_postscript_prefix( parent );
 
-      FT_Int   found, win, apple;
-      FT_UInt  len;
+      face->var_postscript_prefix     = parent->var_postscript_prefix;
+      face->var_postscript_prefix_len = parent->var_postscript_prefix_len;
 
-      char*  result = NULL;
+      return;
+    }
 
-
-      if ( parent )
-      {
-        if ( !parent->var_postscript_prefix )
-          sfnt_load_var_postscript_prefix_if_needed( parent );
-
-        face->var_postscript_prefix     = parent->var_postscript_prefix;
-        face->var_postscript_prefix_len = parent->var_postscript_prefix_len;
-
-        return;
-      }
-
-      /* check whether we have a Variations PostScript Name Prefix */
+    /* check whether we have a Variations PostScript Name Prefix */
+    found = sfnt_get_name_id( face,
+                              TT_NAME_ID_VARIATIONS_PREFIX,
+                              &win,
+                              &apple );
+    if ( !found )
+    {
+      /* otherwise use the typographic family name */
       found = sfnt_get_name_id( face,
-                                TT_NAME_ID_VARIATIONS_PREFIX,
+                                TT_NAME_ID_TYPOGRAPHIC_FAMILY,
                                 &win,
                                 &apple );
-      if ( !found )
-      {
-        /* otherwise use the typographic family name */
-        found = sfnt_get_name_id( face,
-                                  TT_NAME_ID_TYPOGRAPHIC_FAMILY,
-                                  &win,
-                                  &apple );
-      }
-
-      if ( !found )
-      {
-        /* as a last resort we try the family name; note that this is */
-        /* not in the Adobe TechNote, but GX fonts (which predate the */
-        /* TechNote) benefit from this behaviour                      */
-        found = sfnt_get_name_id( face,
-                                  TT_NAME_ID_FONT_FAMILY,
-                                  &win,
-                                  &apple );
-      }
-
-      if ( !found )
-      {
-        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
-                    " Can't construct PS name prefix for font instances\n" ));
-        return;
-      }
-
-      /* prefer Windows entries over Apple */
-      if ( win != -1 )
-        result = get_win_string( face->root.memory,
-                                 face->name_table.stream,
-                                 face->name_table.names + win,
-                                 sfnt_is_alphanumeric,
-                                 0 );
-      if ( !result && apple != -1 )
-        result = get_apple_string( face->root.memory,
-                                   face->name_table.stream,
-                                   face->name_table.names + apple,
-                                   sfnt_is_alphanumeric,
-                                   0 );
-
-      if ( !result )
-      {
-        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
-                    " No valid PS name prefix for font instances found\n" ));
-        return;
-      }
-
-      len = ft_strlen( result );
-
-      /* sanitize if necessary; we reserve space for 36 bytes (a 128bit  */
-      /* checksum as a hex number, preceded by `-' and followed by three */
-      /* ASCII dots, to be used if the constructed PS name would be too  */
-      /* long); this is also sufficient for a single instance            */
-      if ( len > MAX_PS_NAME_LEN - ( 1 + 32 + 3 ) )
-      {
-        len         = MAX_PS_NAME_LEN - ( 1 + 32 + 3 );
-        result[len] = '\0';
-
-        FT_TRACE0(( "sfnt_load_var_postscript_prefix_if_needed:"
-                    " Shortening variation PS name prefix\n" ));
-        FT_TRACE0(( "                     "
-                    " to %d characters\n", len ));
-      }
-
-      face->var_postscript_prefix     = result;
-      face->var_postscript_prefix_len = len;
     }
+
+    if ( !found )
+    {
+      /* as a last resort we try the family name; note that this is */
+      /* not in the Adobe TechNote, but GX fonts (which predate the */
+      /* TechNote) benefit from this behaviour                      */
+      found = sfnt_get_name_id( face,
+                                TT_NAME_ID_FONT_FAMILY,
+                                &win,
+                                &apple );
+    }
+
+    if ( !found )
+    {
+      FT_TRACE0(( "sfnt_load_var_postscript_prefix:"
+                  " Can't construct PS name prefix for font instances\n" ));
+      return;
+    }
+
+    /* prefer Windows entries over Apple */
+    if ( win != -1 )
+      result = get_win_string( face->root.memory,
+                                face->name_table.stream,
+                                face->name_table.names + win,
+                                sfnt_is_alphanumeric,
+                                0 );
+    if ( !result && apple != -1 )
+      result = get_apple_string( face->root.memory,
+                                  face->name_table.stream,
+                                  face->name_table.names + apple,
+                                  sfnt_is_alphanumeric,
+                                  0 );
+
+    if ( !result )
+    {
+      FT_TRACE0(( "sfnt_load_var_postscript_prefix:"
+                  " No valid PS name prefix for font instances found\n" ));
+      return;
+    }
+
+    len = ft_strlen( result );
+
+    /* sanitize if necessary; we reserve space for 36 bytes (a 128bit  */
+    /* checksum as a hex number, preceded by `-' and followed by three */
+    /* ASCII dots, to be used if the constructed PS name would be too  */
+    /* long); this is also sufficient for a single instance            */
+    if ( len > MAX_PS_NAME_LEN - ( 1 + 32 + 3 ) )
+    {
+      len         = MAX_PS_NAME_LEN - ( 1 + 32 + 3 );
+      result[len] = '\0';
+
+      FT_TRACE0(( "sfnt_load_var_postscript_prefix:"
+                  " Shortening variation PS name prefix\n" ));
+      FT_TRACE0(( "                     "
+                  " to %d characters\n", len ));
+    }
+
+    face->var_postscript_prefix     = result;
+    face->var_postscript_prefix_len = len;
   }
 
 
@@ -897,7 +894,8 @@
     char*  p;
 
 
-    sfnt_load_var_postscript_prefix_if_needed( face );
+    if ( !face->var_postscript_prefix )
+      sfnt_load_var_postscript_prefix( face );
 
     mm->get_var_blend( FT_FACE( face ),
                        &num_coords,
