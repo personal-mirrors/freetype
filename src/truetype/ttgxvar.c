@@ -369,6 +369,7 @@
     {
       GX_Blend  source = parent->blend;
 
+
       if ( !source->avar_loaded )
         ft_var_load_avar( parent );
 
@@ -852,6 +853,7 @@
     if ( parent )
     {
       GX_Blend  source = parent->blend;
+
 
       if ( vertical )
       {
@@ -1589,9 +1591,11 @@
     FT_ULong      offsets_len;
     GX_GVar_Head  gvar_head;
 
+
     if ( parent )
     {
       GX_Blend  source = parent->blend;
+
 
       if ( !source->glyphoffsets )
         error = ft_var_load_gvar( parent );
@@ -4402,6 +4406,7 @@
     GX_Blend   blend;
     GX_Blend   clone;
 
+
     memory = face->root.memory;
     blend  = face->blend;
     clone  = NULL;
@@ -4447,6 +4452,7 @@
       {
         FT_UInt  size = blend->mmvar->num_axis;
 
+
         if ( FT_QNEW_ARRAY( clone->coords, size ) )
           goto Fail;
 
@@ -4457,23 +4463,27 @@
       {
         FT_UInt  size = blend->mmvar->num_axis;
 
+
         if ( FT_QNEW_ARRAY( clone->normalizedcoords, size ) )
           goto Fail;
 
-        FT_ARRAY_COPY( clone->normalizedcoords, blend->normalizedcoords, size );
+        FT_ARRAY_COPY( clone->normalizedcoords,
+                       blend->normalizedcoords, size );
       }
 
       if ( blend->normalized_stylecoords )
       {
         FT_MM_Var*  mmvar = blend->mmvar;
         FT_UInt     size;
-        
+
+
         size = mmvar->num_axis * mmvar->num_namedstyles;
 
         if ( FT_QNEW_ARRAY( clone->normalized_stylecoords, size ) )
           goto Fail;
 
-        FT_ARRAY_COPY( clone->normalized_stylecoords, blend->normalized_stylecoords, size );
+        FT_ARRAY_COPY( clone->normalized_stylecoords,
+                       blend->normalized_stylecoords, size );
       }
     }
 

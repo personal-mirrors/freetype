@@ -2505,22 +2505,22 @@ FT_BEGIN_HEADER
    *   FreeType error code.  0~means success.
    *
    * @note:
-   *   The cloned instance retains the root @FT_Face object because it borrows
-   *   the immutable objects from there. This means that if this function is
-   *   being called with a source face that is itself a clone, then the parent
-   *   of source face and the new face will be same.
+   *   The cloned instance retains the root @FT_Face object because it
+   *   borrows the immutable objects from there. This means that if this
+   *   function is being called with a source face that is itself a clone,
+   *   then the parent of source face and the new face will be same.
    *
    *   The client is free to treat the cloned instance as any new face.
    *
-   *   From thread safety perspective, a lock would need to be associated with
-   *   the root face or more precisely, the input stream. This is due the fact
-   *   that a single stream object can be used to open multiple faces. This
-   *   lock would need to be acquired whenever a client wants to mutate any
-   *   face associated with the input stream, including the distinct faces, the
-   *   parent face and the derived faces. An example of face mutation include
-   *   the call to @FT_Load_Glyph and similar API. And of course this lock
-   *   would only be needed when accessing any of the related face from
-   *   multiple threads.
+   *   From thread safety perspective, a lock would need to be associated
+   *   with the root face or more precisely, the input stream. This is due
+   *   the fact that a single stream object can be used to open multiple
+   *   faces. This lock would need to be acquired whenever a client wants to
+   *   mutate any face associated with the input stream, including the
+   *   distinct faces, the parent face and the derived faces. An example of
+   *   face mutation include the call to @FT_Load_Glyph and similar API. And
+   *   of course this lock would only be needed when accessing any of the
+   *   related face from multiple threads.
    *
    */
   FT_EXPORT( FT_Error )

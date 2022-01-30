@@ -834,9 +834,10 @@
     TT_Face    face;
     TT_Face    clone;
 
+
     memory = ttface->memory;
-    face = (TT_Face)ttface;
-    clone = (TT_Face)target;
+    face   = (TT_Face)ttface;
+    clone  = (TT_Face)target;
 
     if ( face->parent )
       clone->parent = face->parent;

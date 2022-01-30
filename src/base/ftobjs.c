@@ -1361,11 +1361,9 @@
 
     /* close the stream for this face if needed */
     if ( !parent )
-    {
       FT_Stream_Free(
         face->stream,
         ( face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0 );
-    }
 
     face->stream = NULL;
 
@@ -2941,7 +2939,7 @@
     FT_Face_Internal  internal;
     FT_Face_Internal  clone;
 
-    memory = face->stream->memory;
+    memory   = face->stream->memory;
     internal = face->internal;
 
     if ( FT_NEW(clone) )
@@ -2974,7 +2972,7 @@
 
     FT_Reference_Face( parent );
 
-    clone->parent = parent;
+    clone->parent   = parent;
     clone->refcount = 1;
 
     *target = clone;
@@ -2994,6 +2992,7 @@
     FT_Driver_Class  clazz;
     FT_Memory        memory;
     FT_Face          clone;
+
 
     error = FT_ERR( Invalid_Face_Handle );
     if ( !face )
@@ -3091,6 +3090,7 @@
   Exit:
     return error;
   }
+
 
   /* documentation is in freetype.h */
 

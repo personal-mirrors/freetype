@@ -36,7 +36,7 @@ FT_BEGIN_HEADER
 
   typedef FT_Error
   (*FT_Face_CopyFunc)( FT_Face  face,
-                       FT_Face  target);
+                       FT_Face  target );
 
   typedef void
   (*FT_Face_DoneFunc)( FT_Face  face );

@@ -1043,6 +1043,7 @@
     FT_Memory     memory = face->root.driver->root.memory;
     TT_NameTable  table  = &face->name_table;
 
+
     if ( !parent && table->names )
     {
       TT_Name  entry = table->names;
