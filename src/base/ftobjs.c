@@ -267,44 +267,6 @@
   }
 
 
-  FT_BASE_DEF( FT_Error )
-  FT_Stream_Clone( FT_Stream   stream,
-                   FT_Stream*  target )
-  {
-    FT_Memory  memory;
-    FT_Stream  clone = NULL;
-    FT_Error   error;
-    
-    memory = stream->memory;
-    
-    if ( FT_NEW( clone ) )
-      goto Exit;
-
-    if ( stream->read )
-    {
-        clone->base = NULL;
-    }
-    else {
-        clone->base = stream->base;
-    }
-    clone->size = stream->size;
-    clone->pos = 0;
-    clone->descriptor = stream->descriptor;
-    clone->pathname = stream->pathname;
-    clone->read = stream->read;
-    clone->close = stream->close;
-    clone->memory = stream->memory;
-    clone->cursor = NULL;
-    clone->limit = NULL;
-    
-    if ( !error )
-      *target = clone;
-    
-  Exit:
-    return error;
-  }
-
-
   FT_BASE_DEF( void )
   FT_Stream_Free( FT_Stream  stream,
                   FT_Int     external )
