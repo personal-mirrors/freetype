@@ -780,7 +780,7 @@
 
 
   static void
-  sfnt_load_var_postscript_prefix( TT_Face face )
+  sfnt_load_var_postscript_prefix( TT_Face  face )
   {
     TT_Face  parent = face->parent;
 
@@ -836,16 +836,16 @@
     /* prefer Windows entries over Apple */
     if ( win != -1 )
       result = get_win_string( face->root.memory,
-                                face->name_table.stream,
-                                face->name_table.names + win,
-                                sfnt_is_alphanumeric,
-                                0 );
+                               face->name_table.stream,
+                               face->name_table.names + win,
+                               sfnt_is_alphanumeric,
+                               0 );
     if ( !result && apple != -1 )
       result = get_apple_string( face->root.memory,
-                                  face->name_table.stream,
-                                  face->name_table.names + apple,
-                                  sfnt_is_alphanumeric,
-                                  0 );
+                                 face->name_table.stream,
+                                 face->name_table.names + apple,
+                                 sfnt_is_alphanumeric,
+                                 0 );
 
     if ( !result )
     {
