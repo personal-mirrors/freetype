@@ -273,6 +273,45 @@
 #endif
 
 
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) && NTDDI_VERSION < 0x0A000007 // NTDDI_WIN10_19H1
+
+  FT_LOCAL_DEF( HANDLE )
+  CreateFileA( LPCSTR                lpFileName,
+               DWORD                 dwDesiredAccess,
+               DWORD                 dwShareMode,
+               LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+               DWORD                 dwCreationDisposition,
+               DWORD                 dwFlagsAndAttributes,
+               HANDLE                hTemplateFile )
+  {
+    int            len;
+    LPWSTR         lpFileNameW;
+
+
+    /* allocate memory space for converted path name */
+    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                               lpFileName, -1, NULL, 0 );
+
+    lpFileNameW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
+
+    if ( !len || !lpFileNameW )
+    {
+      FT_ERROR(( "FT_Stream_Open: cannot convert file name to LPWSTR\n" ));
+      return INVALID_HANDLE_VALUE;
+    }
+
+    /* now it is safe to do the translation */
+    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                         lpFileName, -1, lpFileNameW, len );
+
+    /* open the file */
+    return CreateFileFromAppW( lpFileNameW, dwDesiredAccess, dwShareMode,
+                               lpSecurityAttributes, dwCreationDisposition,
+                               dwFlagsAndAttributes, hTemplateFile );
+  }
+#endif /* !WINAPI_PARTITION_DESKTOP && NTDDI_VERSION < NTDDI_WIN10_19H1 */
+
+
   /* documentation is in ftobjs.h */
 
   FT_BASE_DEF( FT_Error )
@@ -318,7 +357,11 @@
       goto Fail_Open;
     }
 
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)|| NTDDI_VERSION >= 0x0A000007 // NTDDI_WIN10_19H1
     fm = CreateFileMapping( file, NULL, PAGE_READONLY, 0, 0, NULL );
+#else
+    fm = CreateFileMappingFromApp( file, NULL, PAGE_READONLY, 0, NULL );
+#endif
     if ( fm == NULL )
     {
       FT_ERROR(( "FT_Stream_Open: can not map file\n" ));
@@ -330,8 +373,13 @@
     /* a size greater than LONG_MAX                                    */
     stream->size = size.LowPart;
     stream->pos  = 0;
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) || NTDDI_VERSION >= 0x0A000007 // NTDDI_WIN10_19H1
     stream->base = (unsigned char *)
                      MapViewOfFile( fm, FILE_MAP_READ, 0, 0, 0 );
+#else
+    stream->base = (unsigned char *)
+                     MapViewOfFileFromApp( fm, FILE_MAP_READ, 0, 0 );
+#endif
 
     CloseHandle( fm );
 
