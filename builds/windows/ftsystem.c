@@ -230,11 +230,14 @@
                         dwCreationDisposition, &createExParams );
   }
 #endif
+#if !defined(CreateFileMappingW)
 #define CreateFileMappingW( a, b, c, d, e, f ) \
         CreateFileMappingFromApp( a, b, c, PACK_DWORD64( d, e ), f )
+#endif
+#if !defined(MapViewOfFile)
 #define MapViewOfFile( a, b, c, d, e ) \
         MapViewOfFileFromApp( a, b, PACK_DWORD64( c, d ), e )
-
+#endif
 #define UWP_LEGACY
 
 #endif
