@@ -202,9 +202,34 @@
 
 #define PACK_DWORD64( hi, lo )  ( ( (DWORD64)(hi) << 32 ) | (DWORD)(lo) )
 
+#if defined( NTDDI_VERSION ) && NTDDI_VERSION >= 0x0A000005
+// CreateFileFromAppW is only available since 1803/RS4
+// https://docs.microsoft.com/en-us/windows/win32/api/fileapifromapp/nf-fileapifromapp-createfilefromappw
 #include <fileapifromapp.h>
 #define CreateFileW( a, b, c, d, e, f, g ) \
         CreateFileFromAppW( a, b, c, d, e, f, g )
+#else
+#define CreateFileW( a, b, c, d, e, f, g ) \
+  FT_LOCAL_DEF( HANDLE )
+  CreateFileW( LPCWSTR               lpFileName,
+               DWORD                 dwDesiredAccess,
+               DWORD                 dwShareMode,
+               LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+               DWORD                 dwCreationDisposition,
+               DWORD                 dwFlagsAndAttributes,
+               HANDLE                hTemplateFile )
+  {
+    CREATEFILE2_EXTENDED_PARAMETERS createExParams;
+    createExParams.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+    createExParams.dwFileAttributes     = dwFlagsAndAttributes & 0x0000FFFF;
+    createExParams.dwSecurityQosFlags   = dwFlagsAndAttributes & 0x000F0000;
+    createExParams.dwFileFlags          = dwFlagsAndAttributes & 0xFFF00000;
+    createExParams.lpSecurityAttributes = lpSecurityAttributes;
+    createExParams.hTemplateFile        = hTemplateFile;
+    return CreateFile2( lpFileName, dwDesiredAccess, dwShareMode,
+                        dwCreationDisposition, &createExParams );
+  }
+#endif
 #define CreateFileMapping( a, b, c, d, e, f ) \
         CreateFileMappingFromApp( a, b, c, PACK_DWORD64( d, e ), f )
 #define MapViewOfFile( a, b, c, d, e ) \
