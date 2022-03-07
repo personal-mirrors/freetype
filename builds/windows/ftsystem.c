@@ -230,7 +230,7 @@
                         dwCreationDisposition, &createExParams );
   }
 #endif
-#define CreateFileMapping( a, b, c, d, e, f ) \
+#define CreateFileMappingW( a, b, c, d, e, f ) \
         CreateFileMappingFromApp( a, b, c, PACK_DWORD64( d, e ), f )
 #define MapViewOfFile( a, b, c, d, e ) \
         MapViewOfFileFromApp( a, b, PACK_DWORD64( c, d ), e )
@@ -344,7 +344,7 @@
       goto Fail_Open;
     }
 
-    fm = CreateFileMapping( file, NULL, PAGE_READONLY, 0, 0, NULL );
+    fm = CreateFileMappingW( file, NULL, PAGE_READONLY, 0, 0, NULL );
     if ( fm == NULL )
     {
       FT_ERROR(( "FT_Stream_Open: can not map file\n" ));
