@@ -202,6 +202,7 @@
 
 #define PACK_DWORD64( hi, lo )  ( ( (DWORD64)(hi) << 32 ) | (DWORD)(lo) )
 
+#include <fileapifromapp.h>
 #define CreateFileW( a, b, c, d, e, f, g ) \
         CreateFileFromAppW( a, b, c, d, e, f, g )
 #define CreateFileMapping( a, b, c, d, e, f ) \
