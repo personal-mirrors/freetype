@@ -140,6 +140,6 @@ Please provide a **[Merge Request]** for larger changes. <br>
 
 [Install]: ./docs/INSTALL
 [Changes]: ./docs/CHANGES
-[License]: ./LICENSE
+[License]: ./LICENSE.TXT
 
 [Badge Version]: https://img.shields.io/badge/version-2.11.1-blue
