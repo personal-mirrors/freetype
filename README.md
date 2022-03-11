@@ -1,105 +1,145 @@
-FreeType 2.11.1
-===============
 
-Homepage: https://www.freetype.org
+# FreeType ![Badge Version]
 
-FreeType is a freely available software library to render fonts.
+*A freely available software library to render fonts.*
 
-It  is  written  in  C,   designed  to  be  small,  efficient,  highly
-customizable,  and portable  while capable  of producing  high-quality
-output (glyph images) of most vector and bitmap font formats.
+---
 
-Please   read  the   `docs/CHANGES`   file,   it  contains   IMPORTANT
-INFORMATION.
+ **[❮ Website ❯][Website]**
+ **[❮ Install ❯][Install]**
+ **[❮ Changes ❯][Changes]**
+ **[❮ Documentation ❯][Documentation]**
+ **[❮ API ❯][API]**
+ **[❮ License ❯][License]**
 
-Read the files `docs/INSTALL*`  for installation instructions; see the
-file `docs/LICENSE.TXT` for the available licenses.
+---
 
-For using FreeType's git repository  instead of a distribution bundle,
-please read file `README.git`.
+**FreeType** is a **C** library written to produce high <br>
+quality output in the form of glyph images of <br>
+most vector / bitmap font formats while being:
 
-The FreeType 2 API reference is located in directory `docs/reference`;
-use the file  `index.html` as the top entry point.   [Please note that
-currently  the search  function  for  locally installed  documentation
-doesn't work due to cross-site scripting issues.]
+- **Customizable**
+- **Efficient**
+- **Portable**
+- **Small**
 
-Additional documentation is  available as a separate  package from our
-sites.  Go to
+---
 
-  https://download.savannah.gnu.org/releases/freetype/
+<br>
 
-and download one of the following files.
+## Documentation
 
-  freetype-doc-2.11.1.tar.xz
-  freetype-doc-2.11.1.tar.gz
-  ftdoc2111.zip
+Check out the [`README.git`][README.Git] for more <br>
+info on how to work with this repository.
 
-To view the documentation online, go to
+### Downloads
 
-  https://www.freetype.org/freetype2/docs/
+Additional information can be downloaded from the **[Releases]** page.
+- [`freetype-doc-2.11.1.tar.xz`][Documentation XZ]
+- [`freetype-doc-2.11.1.tar.gz`][Documentation GZ]
+- [`ftdoc2111.zip`][Documentation ZIP]
 
+<br>
 
-Mailing Lists
--------------
+---
 
-The preferred  way of  communication with the  FreeType team  is using
-e-mail lists.
+<br>
 
-  general use and discussion:      freetype@nongnu.org
-  engine internals, porting, etc.: freetype-devel@nongnu.org
-  announcements:                   freetype-announce@nongnu.org
-  git repository tracker:          freetype-commit@nongnu.org
+## Mailing Lists
 
-The lists are moderated; see
+*Our preferred ways of communication are email lists.* <br>
+*↳* [*How do I subscribe?*][Contact]
 
-  https://www.freetype.org/contact.html
+<br>
 
-how to subscribe.
+#### General / Discussions
 
+[`FreeType@nongnu.org`](mailto:freetype@nongnu.org)
 
-Bugs
-----
+#### Engine Internals / Porting
 
-Please submit bug reports at
+[`FreeType-Devel@nongnu.org`](mailto:freetype-devel@nongnu.org)
 
-  https://gitlab.freedesktop.org/freetype/freetype/-/issues
+#### Announcements
 
-Alternatively,    you    might    report    bugs    by    e-mail    to
-`freetype-devel@nongnu.org`.    Don't  forget   to  send   a  detailed
-explanation of the problem -- there  is nothing worse than receiving a
-terse message that only says 'it doesn't work'.
+[`FreeType-Announce@nongnu.org`](mailto:freetype-announce@nongnu.org)
 
+#### Git Repository Tracker
 
-Patches
--------
+[`FreeType-Commit@nongnu.org`](mailto:freetype-commit@nongnu.org)
 
-For larger changes please provide merge requests at
+<br>
 
-  https://gitlab.freedesktop.org/freetype/freetype/-/merge_requests
+***These lists are moderated.***
 
-Alternatively, you can send patches to the `freetype-devel@nongnu.org`
-mailing list  -- and thank you  in advance for your  work on improving
-FreeType!
+<br>
 
-Details on the process can be found here:
+---
 
-  https://www.freetype.org/developer.html#patches
+<br>
 
+## Bugs
 
-Enjoy!
+You can either **[Create An Issue][Issues]** or send <br>
+an email to [`FreeType-Devel@nongnu.org`](mailto:freetype-devel@nongnu.org)
 
-  The FreeType Team
+***Please don't forget to send a detailed explanation,*** <br>
+*there is nothing worse than receiving a terse message* <br>
+*that only says `it doesn't work` .*
 
-----------------------------------------------------------------------
+<br>
 
-Copyright (C) 2006-2022 by
-David Turner, Robert Wilhelm, and Werner Lemberg.
+---
 
-This  file is  part of  the FreeType  project, and  may only  be used,
-modified,  and distributed  under the  terms of  the  FreeType project
-license,  LICENSE.TXT.  By  continuing to  use, modify,  or distribute
-this file you  indicate that you have read  the license and understand
-and accept it fully.
+<br>
 
+## Patches
 
---- end of README ---
+Please provide a **[Merge Request]** for larger changes. <br>
+*↳* [*How does the process work?*][Patches]
+
+*Alternatively, you can send patches to the* <br>
+*[`FreeType-Devel@nongnu.org`](mailto:freetype-devel@nongnu.org) mailing list.*
+
+***Thank you  in advance for your  work on improving FreeType!***
+
+**Enjoy!** <br>
+ *\- The FreeType Team*
+
+<br>
+
+---
+
+<br>
+
+    Copyright (C) 2006 - 2022 by
+    David Turner, Robert Wilhelm, and Werner Lemberg.
+
+    This  file is  part of  the FreeType  project, and  may only  be used,
+    modified,  and distributed  under the  terms of  the  FreeType project
+    license,  LICENSE.  By  continuing to  use, modify,  or distribute
+    this file you  indicate that you have read  the license and understand
+    and accept it fully.
+
+<!----------------------------------------------------------------------------->
+
+[Website]: https://www.freetype.org
+[Issues]: https://gitlab.freedesktop.org/freetype/freetype/-/issues
+[Contact]: https://www.freetype.org/contact.html
+[Merge Request]: https://gitlab.freedesktop.org/freetype/freetype/-/merge_requests
+[Patches]: https://www.freetype.org/developer.html#patches
+[Documentation]: https://www.freetype.org/freetype2/docs/
+[Releases]: https://download.savannah.gnu.org/releases/freetype/
+[API]: https://freetype.org/freetype2/docs/reference/index.html
+
+[README.Git]: ./README.git
+
+[Documentation XZ]: https://download.savannah.gnu.org/releases/freetype/freetype-2.11.1.tar.xz
+[Documentation GZ]: https://download.savannah.gnu.org/releases/freetype/freetype-2.11.1.tar.gz
+[Documentation ZIP]: https://download.savannah.gnu.org/releases/freetype/ftdmo2111.zip
+
+[Install]: ./docs/INSTALL
+[Changes]: ./docs/CHANGES
+[License]: ./LICENSE
+
+[Badge Version]: https://img.shields.io/badge/version-2.11.1-blue
