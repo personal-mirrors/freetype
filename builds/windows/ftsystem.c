@@ -197,8 +197,8 @@
 
 
   /* non-desktop Universal Windows Platform */
-#if defined( WINAPI_FAMILY_PARTITION )                 && \
-    !WINAPI_FAMILY_PARTITION( WINAPI_PARTITION_DESKTOP )
+#if defined( WINAPI_FAMILY_PARTITION )
+#if !WINAPI_FAMILY_PARTITION( WINAPI_PARTITION_DESKTOP )
 
 #define PACK_DWORD64( hi, lo )  ( ( (DWORD64)(hi) << 32 ) | (DWORD)(lo) )
 
@@ -249,6 +249,7 @@
                         dwCreationDisposition, &createExParams );
   }
 
+#endif
 #endif
 
 
