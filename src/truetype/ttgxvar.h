@@ -438,6 +438,10 @@ FT_BEGIN_HEADER
                     FT_Fixed*   *normalizedcoords,
                     FT_MM_Var*  *mm_var );
 
+  FT_LOCAL( FT_Error )
+  tt_clone_blend( TT_Face    face,
+                  GX_Blend*  target );
+
   FT_LOCAL( void )
   tt_done_blend( TT_Face  face );
 

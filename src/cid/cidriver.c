@@ -235,6 +235,7 @@
     sizeof ( CID_GlyphSlotRec ),
 
     cid_face_init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
     cid_face_done,              /* FT_Face_DoneFunc  done_face */
     cid_size_init,              /* FT_Size_InitFunc  init_size */
     cid_size_done,              /* FT_Size_DoneFunc  done_size */

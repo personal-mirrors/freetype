@@ -653,6 +653,7 @@
     sizeof ( FT_GlyphSlotRec ),
 
     tt_face_init,               /* FT_Face_InitFunc  init_face */
+    tt_face_copy,               /* FT_Face_CopyFunc  copy_face */
     tt_face_done,               /* FT_Face_DoneFunc  done_face */
     tt_size_init,               /* FT_Size_InitFunc  init_size */
     tt_size_done,               /* FT_Size_DoneFunc  done_size */

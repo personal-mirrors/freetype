@@ -1144,6 +1144,7 @@
     sizeof ( CFF_GlyphSlotRec ),
 
     cff_face_init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
     cff_face_done,              /* FT_Face_DoneFunc  done_face */
     cff_size_init,              /* FT_Size_InitFunc  init_size */
     cff_size_done,              /* FT_Size_DoneFunc  done_size */

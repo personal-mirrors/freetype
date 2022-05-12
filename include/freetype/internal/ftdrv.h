@@ -34,6 +34,10 @@ FT_BEGIN_HEADER
                        FT_Int         num_params,
                        FT_Parameter*  parameters );
 
+  typedef FT_Error
+  (*FT_Face_CopyFunc)( FT_Face  face,
+                       FT_Face  target );
+
   typedef void
   (*FT_Face_DoneFunc)( FT_Face  face );
 
@@ -112,6 +116,9 @@ FT_BEGIN_HEADER
    *   init_face ::
    *     The format-specific face constructor.
    *
+   *   copy_face ::
+   *     The format-specific face copier.
+   *  
    *   done_face ::
    *     The format-specific face destructor.
    *
@@ -170,6 +177,7 @@ FT_BEGIN_HEADER
     FT_Long                  slot_object_size;
 
     FT_Face_InitFunc         init_face;
+    FT_Face_CopyFunc         copy_face;
     FT_Face_DoneFunc         done_face;
 
     FT_Size_InitFunc         init_size;
@@ -232,6 +240,7 @@ FT_BEGIN_HEADER
           size_object_size_,                 \
           slot_object_size_,                 \
           init_face_,                        \
+          copy_face_,                        \
           done_face_,                        \
           init_size_,                        \
           done_size_,                        \
@@ -261,6 +270,7 @@ FT_BEGIN_HEADER
     slot_object_size_,                       \
                                              \
     init_face_,                              \
+    copy_face_,                              \
     done_face_,                              \
                                              \
     init_size_,                              \

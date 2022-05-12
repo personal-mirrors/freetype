@@ -282,7 +282,9 @@
     FT_Stream  stream = face->root.stream;
 
 
-    FT_FRAME_RELEASE( face->glyph_locations );
+    if ( !face->parent )
+      FT_FRAME_RELEASE( face->glyph_locations );
+
     face->num_locations = 0;
   }
 
@@ -620,8 +622,11 @@
     FT_Memory  memory = stream->memory;
 
 
-    FT_FREE( face->hdmx_records );
-    FT_FRAME_RELEASE( face->hdmx_table );
+    if ( !face->parent )
+    {
+      FT_FREE( face->hdmx_records );
+      FT_FRAME_RELEASE( face->hdmx_table );
+    }
   }
 
 

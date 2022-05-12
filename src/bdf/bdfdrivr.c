@@ -997,6 +997,7 @@ THE SOFTWARE.
     sizeof ( FT_GlyphSlotRec ),
 
     BDF_Face_Init,              /* FT_Face_InitFunc  init_face */
+    NULL,                       /* FT_Face_CopyFunc  copy_face */
     BDF_Face_Done,              /* FT_Face_DoneFunc  done_face */
     NULL,                       /* FT_Size_InitFunc  init_size */
     NULL,                       /* FT_Size_DoneFunc  done_size */

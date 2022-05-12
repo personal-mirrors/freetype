@@ -353,6 +353,7 @@
   static void
   ft_var_load_avar( TT_Face  face )
   {
+    TT_Face         parent = face->parent;
     FT_Stream       stream = FT_FACE_STREAM( face );
     FT_Memory       memory = stream->memory;
     GX_Blend        blend  = face->blend;
@@ -363,6 +364,20 @@
     FT_Int          i, j;
     FT_ULong        table_len;
 
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+
+      if ( !source->avar_loaded )
+        ft_var_load_avar( parent );
+
+      blend->avar_loaded  = source->avar_loaded;
+      blend->avar_segment = source->avar_segment;
+
+      return;
+    }
 
     FT_TRACE2(( "AVAR " ));
 
@@ -838,6 +853,7 @@
   ft_var_load_hvvar( TT_Face  face,
                      FT_Bool  vertical )
   {
+    TT_Face    parent = face->parent;
     FT_Stream  stream = FT_FACE_STREAM( face );
     FT_Memory  memory = stream->memory;
 
@@ -845,13 +861,38 @@
 
     GX_HVVarTable  table;
 
-    FT_Error   error;
+    FT_Error   error = FT_Err_Ok;
     FT_UShort  majorVersion;
     FT_ULong   table_len;
     FT_ULong   table_offset;
     FT_ULong   store_offset;
     FT_ULong   widthMap_offset;
 
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+
+      if ( vertical )
+      {
+        if ( !source->vvar_loaded )
+          error = ft_var_load_hvvar( parent, vertical );
+
+        blend->vvar_loaded  = source->vvar_loaded;
+        blend->vvar_table   = source->vvar_table;
+      }
+      else
+      {
+        if ( !source->hvar_loaded )
+          error = ft_var_load_hvvar( parent, vertical );
+
+        blend->hvar_loaded  = source->hvar_loaded;
+        blend->hvar_table   = source->hvar_table;
+      }
+
+      goto Exit;
+    }
 
     if ( vertical )
     {
@@ -1581,16 +1622,35 @@
   static FT_Error
   ft_var_load_gvar( TT_Face  face )
   {
+    TT_Face       parent = face->parent;
     FT_Stream     stream = FT_FACE_STREAM( face );
     FT_Memory     memory = stream->memory;
     GX_Blend      blend  = face->blend;
-    FT_Error      error;
+    FT_Error      error  = FT_Err_Ok;
     FT_UInt       i, j;
     FT_ULong      table_len;
     FT_ULong      gvar_start;
     FT_ULong      offsetToData;
     FT_ULong      offsets_len;
     GX_GVar_Head  gvar_head;
+
+
+    if ( parent )
+    {
+      GX_Blend  source = parent->blend;
+
+
+      if ( !source->glyphoffsets )
+        error = ft_var_load_gvar( parent );
+
+      blend->tuplecount   = source->tuplecount;
+      blend->tuplecoords  = source->tuplecoords;
+      blend->gv_glyphcnt  = source->gv_glyphcnt;
+      blend->glyphoffsets = source->glyphoffsets;
+      blend->gvar_size    = source->gvar_size;
+
+      goto Exit;
+    }
 
     static const FT_Frame_Field  gvar_fields[] =
     {
@@ -4378,6 +4438,110 @@
   }
 
 
+  FT_LOCAL_DEF( FT_Error )
+  tt_clone_blend( TT_Face    face,
+                  GX_Blend*  target )
+  {
+    FT_Error   error = FT_Err_Ok;
+    FT_Memory  memory;
+    GX_Blend   blend;
+    GX_Blend   clone;
+
+
+    memory = face->root.memory;
+    blend  = face->blend;
+    clone  = NULL;
+
+    if ( blend )
+    {
+      if ( FT_NEW( clone ) )
+        goto Exit;
+
+      clone->num_axis         = blend->num_axis;
+      clone->coords           = NULL;               /* Lazy, Mutable */
+      clone->normalizedcoords = NULL;               /* Lazy, Mutable */
+
+      clone->mmvar     = blend->mmvar;              /* Readonly, Immutable */
+      clone->mmvar_len = blend->mmvar_len;
+
+      clone->normalized_stylecoords = NULL;         /* Readonly, Mutable */
+
+      clone->avar_loaded  = blend->avar_loaded;
+      clone->avar_segment = blend->avar_segment;    /* Lazy, Immutable */
+
+      clone->hvar_loaded  = blend->hvar_loaded;
+      clone->hvar_checked = blend->hvar_checked;
+      clone->hvar_error   = blend->hvar_error;
+      clone->hvar_table   = blend->hvar_table;      /* Lazy, Immutable */
+
+      clone->vvar_loaded  = blend->vvar_loaded;
+      clone->vvar_checked = blend->vvar_checked;
+      clone->vvar_error   = blend->vvar_error;
+      clone->vvar_table   = blend->vvar_table;      /* Lazy, Immutable */
+
+      clone->mvar_table = blend->mvar_table;        /* Readonly, Immutable */
+
+      clone->tuplecount  = blend->tuplecount;
+      clone->tuplecoords = blend->tuplecoords;      /* Lazy, Immutable */
+
+      clone->gv_glyphcnt  = blend->gv_glyphcnt;
+      clone->glyphoffsets = blend->glyphoffsets;    /* Lazy, Immutable */
+
+      clone->gvar_size = blend->gvar_size;
+
+      if ( blend->coords )
+      {
+        FT_UInt  size = blend->mmvar->num_axis;
+
+
+        if ( FT_QNEW_ARRAY( clone->coords, size ) )
+          goto Fail;
+
+        FT_ARRAY_COPY( clone->coords, blend->coords, size );
+      }
+
+      if ( blend->normalizedcoords )
+      {
+        FT_UInt  size = blend->mmvar->num_axis;
+
+
+        if ( FT_QNEW_ARRAY( clone->normalizedcoords, size ) )
+          goto Fail;
+
+        FT_ARRAY_COPY( clone->normalizedcoords,
+                       blend->normalizedcoords, size );
+      }
+
+      if ( blend->normalized_stylecoords )
+      {
+        FT_MM_Var*  mmvar = blend->mmvar;
+        FT_UInt     size;
+
+
+        size = mmvar->num_axis * mmvar->num_namedstyles;
+
+        if ( FT_QNEW_ARRAY( clone->normalized_stylecoords, size ) )
+          goto Fail;
+
+        FT_ARRAY_COPY( clone->normalized_stylecoords,
+                       blend->normalized_stylecoords, size );
+      }
+    }
+
+    *target = clone;
+    goto Exit;
+
+  Fail:
+    FT_FREE( clone->normalized_stylecoords );
+    FT_FREE( clone->normalizedcoords );
+    FT_FREE( clone->coords );
+    FT_FREE( clone );
+
+  Exit:
+    return error;
+  }
+
+
   /**************************************************************************
    *
    * @Function:
@@ -4389,6 +4553,7 @@
   FT_LOCAL_DEF( void )
   tt_done_blend( TT_Face  face )
   {
+    TT_Face    parent = face->parent;
     FT_Memory  memory = FT_FACE_MEMORY( face );
     GX_Blend   blend  = face->blend;
 
@@ -4404,16 +4569,18 @@
       FT_FREE( blend->coords );
       FT_FREE( blend->normalizedcoords );
       FT_FREE( blend->normalized_stylecoords );
-      FT_FREE( blend->mmvar );
 
-      if ( blend->avar_segment )
+      if ( !parent )
+        FT_FREE( blend->mmvar );
+
+      if ( !parent && blend->avar_segment )
       {
         for ( i = 0; i < num_axes; i++ )
           FT_FREE( blend->avar_segment[i].correspondence );
         FT_FREE( blend->avar_segment );
       }
 
-      if ( blend->hvar_table )
+      if ( !parent && blend->hvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->hvar_table->itemStore );
@@ -4423,7 +4590,7 @@
         FT_FREE( blend->hvar_table );
       }
 
-      if ( blend->vvar_table )
+      if ( !parent && blend->vvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->vvar_table->itemStore );
@@ -4433,7 +4600,7 @@
         FT_FREE( blend->vvar_table );
       }
 
-      if ( blend->mvar_table )
+      if ( !parent && blend->mvar_table )
       {
         ft_var_done_item_variation_store( face,
                                           &blend->mvar_table->itemStore );
@@ -4442,8 +4609,12 @@
         FT_FREE( blend->mvar_table );
       }
 
-      FT_FREE( blend->tuplecoords );
-      FT_FREE( blend->glyphoffsets );
+      if ( !parent )
+      {
+        FT_FREE( blend->tuplecoords );
+        FT_FREE( blend->glyphoffsets );
+      }
+
       FT_FREE( blend );
     }
   }

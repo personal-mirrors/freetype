@@ -249,7 +249,7 @@
     Cpal*  cpal = (Cpal*)face->cpal;
 
 
-    if ( cpal )
+    if ( !face->parent && cpal )
     {
       FT_FRAME_RELEASE( cpal->table );
       FT_FREE( cpal );

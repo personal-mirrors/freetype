@@ -1291,6 +1291,7 @@
   {
     FT_Driver_Class  clazz = driver->clazz;
 
+    FT_Face  parent = face->internal->parent;
 
     /* discard auto-hinting data */
     if ( face->autohint.finalizer )
@@ -1313,18 +1314,23 @@
       face->generic.finalizer( face );
 
     /* discard charmaps */
-    destroy_charmaps( face, memory );
+    if ( !parent )
+      destroy_charmaps( face, memory );
 
     /* finalize format-specific stuff */
     if ( clazz->done_face )
       clazz->done_face( face );
 
     /* close the stream for this face if needed */
-    FT_Stream_Free(
-      face->stream,
-      ( face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0 );
+    if ( !parent )
+      FT_Stream_Free(
+        face->stream,
+        ( face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0 );
 
     face->stream = NULL;
+
+    if ( parent )
+      FT_Done_Face( parent );
 
     /* get rid of it */
     if ( face->internal )
@@ -2784,6 +2790,7 @@
       internal->transform_delta.x = 0;
       internal->transform_delta.y = 0;
 
+      internal->parent   = NULL;
       internal->refcount = 1;
 
       internal->no_stem_darkening = -1;
@@ -2887,6 +2894,169 @@
     FT_Stream_Free( stream,
                     FT_BOOL( parameters->stream                     &&
                              ( parameters->flags & FT_OPEN_STREAM ) ) );
+
+  Exit:
+    return error;
+  }
+
+
+  static FT_Error
+  clone_face_internal( FT_Face            face,
+                       FT_Face_Internal*  target )
+  {
+    FT_Error          error = FT_Err_Ok;
+    FT_Face           parent;
+    FT_Memory         memory;
+    FT_Face_Internal  internal;
+    FT_Face_Internal  clone;
+
+    memory   = face->stream->memory;
+    internal = face->internal;
+
+    if ( FT_NEW(clone) )
+      goto Exit;
+
+    clone->transform_matrix = internal->transform_matrix;
+    clone->transform_delta  = internal->transform_delta;
+    clone->transform_flags  = internal->transform_flags;
+
+    clone->services = internal->services;
+
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    clone->incremental_interface = internal->incremental_interface; /* Static */
+#endif
+
+    clone->no_stem_darkening = internal->no_stem_darkening;
+    clone->random_seed       = internal->random_seed;
+
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+    ft_memcpy( clone->lcd_weights,
+               internal->lcd_weights,
+               FT_LCD_FILTER_FIVE_TAPS );
+    clone->lcd_filter_func = internal->lcd_filter_func;
+#endif
+
+    if ( internal->parent )
+      parent = internal->parent;
+    else
+      parent = face;
+
+    FT_Reference_Face( parent );
+
+    clone->parent   = parent;
+    clone->refcount = 1;
+
+    *target = clone;
+
+  Exit:
+    return error;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Clone_Face( FT_Face   face,
+                 FT_Face*  target )
+  {
+    FT_Error         error;
+    FT_Driver_Class  clazz;
+    FT_Memory        memory;
+    FT_Face          clone;
+
+
+    error = FT_ERR( Invalid_Face_Handle );
+    if ( !face )
+      goto Exit;
+
+    clazz  = face->driver->clazz;
+    memory = face->memory;
+
+    if ( !clazz->copy_face )
+    {
+      error = FT_ERR( Unimplemented_Feature );
+      goto Exit;
+    }
+
+    if ( FT_ALLOC( clone, clazz->face_object_size ) )
+      goto Exit;
+
+    clone->num_faces  = face->num_faces;
+    clone->face_index = face->face_index;
+
+    clone->face_flags  = face->face_flags;
+    clone->style_flags = face->style_flags;
+
+    clone->num_glyphs = face->num_glyphs;
+
+    clone->family_name = face->family_name;
+    clone->style_name  = face->style_name;
+
+    clone->num_fixed_sizes = face->num_fixed_sizes;
+    clone->available_sizes = face->available_sizes;
+
+    clone->num_charmaps = face->num_charmaps;
+    clone->charmaps     = face->charmaps;           /* Readonly, Immutable */
+
+    clone->generic.data      = NULL;
+    clone->generic.finalizer = NULL;
+
+    clone->bbox = face->bbox;
+
+    clone->units_per_EM = face->units_per_EM;
+    clone->ascender     = face->ascender;
+    clone->descender    = face->descender;
+    clone->height       = face->height;
+
+    clone->max_advance_width  = face->max_advance_width;
+    clone->max_advance_height = face->max_advance_height;
+
+    clone->underline_position  = face->underline_position;
+    clone->underline_thickness = face->underline_thickness;
+
+    clone->glyph   = NULL;                          /* ReadWrite, Mutable */
+    clone->size    = NULL;                          /* ReadWrite, Mutable */
+    clone->charmap = face->charmap;                 /* Static */
+
+    clone->driver = face->driver;
+    clone->memory = face->memory;
+    clone->stream = face->stream;
+
+    clone->sizes_list.head = NULL;
+    clone->sizes_list.tail = NULL;
+
+    clone->autohint.data      = NULL;
+    clone->autohint.finalizer = NULL;
+
+    clone->extensions = NULL;
+
+    error = clazz->copy_face( face, clone );
+    if ( error )
+      goto Fail;
+
+    error = FT_New_GlyphSlot( clone, &clone->glyph );
+    if ( error )
+      goto Fail;
+
+    error = FT_New_Size( clone, &clone->size );
+    if ( error )
+      goto Fail_Size;
+
+    error = clone_face_internal( face, &clone->internal );
+    if ( error )
+      goto Fail_Internal;
+
+    *target = clone;
+    goto Exit;
+
+  Fail_Internal:
+    FT_Done_Size( clone->size );
+
+  Fail_Size:
+    FT_Done_GlyphSlot( clone->glyph );
+
+  Fail:
+    FT_FREE( clone );
 
   Exit:
     return error;
