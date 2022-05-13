@@ -954,6 +954,7 @@
                                  NULL,
     (FT_Var_Load_Item_Variation_Store)
                                  NULL,
+    (FT_Var_Get_Item_Delta)      NULL,
     (FT_Var_Done_Item_Variation_Store)
                                  NULL,
     (FT_Var_Done_Delta_Set_Index_Map)

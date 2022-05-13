@@ -159,6 +159,12 @@ FT_BEGIN_HEADER
                                        FT_ULong         offset,
                                        GX_ItemVarStore  itemStore );
 
+  typedef FT_Int
+  (*FT_Var_Get_Item_Delta)( FT_Face          face,
+                            GX_ItemVarStore  itemStore,
+                            FT_UInt          outerIndex,
+                            FT_UInt          innerIndex );
+
   typedef void
   (*FT_Var_Done_Item_Variation_Store)( FT_Face          face,
                                        GX_ItemVarStore  itemStore );
@@ -184,6 +190,7 @@ FT_BEGIN_HEADER
     /* for internal use; only needed for code sharing between modules */
     FT_Var_Load_Delta_Set_Index_Map_Func  load_delta_set_idx_map;
     FT_Var_Load_Item_Variation_Store      load_item_variation_store;
+    FT_Var_Get_Item_Delta                 get_item_delta;
     FT_Var_Done_Item_Variation_Store      done_item_variation_store;
     FT_Var_Done_Delta_Set_Index_Map       done_delta_set_index_map;
     FT_Get_Var_Blend_Func                 get_var_blend;
@@ -191,41 +198,43 @@ FT_BEGIN_HEADER
   };
 
 
-#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_,                    \
-                                           get_mm_,                   \
-                                           set_mm_design_,            \
-                                           set_mm_blend_,             \
-                                           get_mm_blend_,             \
-                                           get_mm_var_,               \
-                                           set_var_design_,           \
-                                           get_var_design_,           \
-                                           set_instance_,             \
-                                           set_weightvector_,         \
-                                           get_weightvector_,         \
-                                           load_delta_set_idx_map,    \
-                                           load_item_variation_store, \
-                                           done_item_variation_store, \
-                                           done_delta_set_index_map,  \
-                                           get_var_blend_,            \
-                                           done_blend_ )              \
-  static const FT_Service_MultiMastersRec  class_ =                   \
-  {                                                                   \
-    get_mm_,                                                          \
-    set_mm_design_,                                                   \
-    set_mm_blend_,                                                    \
-    get_mm_blend_,                                                    \
-    get_mm_var_,                                                      \
-    set_var_design_,                                                  \
-    get_var_design_,                                                  \
-    set_instance_,                                                    \
-    set_weightvector_,                                                \
-    get_weightvector_,                                                \
-    load_delta_set_idx_map,                                           \
-    load_item_variation_store,                                        \
-    done_item_variation_store,                                        \
-    done_delta_set_index_map,                                         \
-    get_var_blend_,                                                   \
-    done_blend_                                                       \
+#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_,                     \
+                                           get_mm_,                    \
+                                           set_mm_design_,             \
+                                           set_mm_blend_,              \
+                                           get_mm_blend_,              \
+                                           get_mm_var_,                \
+                                           set_var_design_,            \
+                                           get_var_design_,            \
+                                           set_instance_,              \
+                                           set_weightvector_,          \
+                                           get_weightvector_,          \
+                                           load_delta_set_idx_map_,    \
+                                           load_item_variation_store_, \
+                                           get_item_delta_,            \
+                                           done_item_variation_store_, \
+                                           done_delta_set_index_map_,  \
+                                           get_var_blend_,             \
+                                           done_blend_ )               \
+  static const FT_Service_MultiMastersRec  class_ =                    \
+  {                                                                    \
+    get_mm_,                                                           \
+    set_mm_design_,                                                    \
+    set_mm_blend_,                                                     \
+    get_mm_blend_,                                                     \
+    get_mm_var_,                                                       \
+    set_var_design_,                                                   \
+    get_var_design_,                                                   \
+    set_instance_,                                                     \
+    set_weightvector_,                                                 \
+    get_weightvector_,                                                 \
+    load_delta_set_idx_map_,                                           \
+    load_item_variation_store_,                                        \
+    get_item_delta_,                                                   \
+    done_item_variation_store_,                                        \
+    done_delta_set_index_map_,                                         \
+    get_var_blend_,                                                    \
+    done_blend_                                                        \
   };
 
   /* */
