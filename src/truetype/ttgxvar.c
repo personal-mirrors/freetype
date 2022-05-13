@@ -4377,6 +4377,15 @@
     }
   }
 
+  static void
+  ft_var_done_delta_set_index_map( TT_Face            face,
+                                   GX_DeltaSetIdxMap  deltaSetIdxMap )
+  {
+    FT_Memory  memory = FT_FACE_MEMORY( face );
+
+    FT_FREE( deltaSetIdxMap->innerIndex );
+    FT_FREE( deltaSetIdxMap->outerIndex );
+  }
 
   /**************************************************************************
    *
@@ -4418,8 +4427,8 @@
         ft_var_done_item_variation_store( face,
                                           &blend->hvar_table->itemStore );
 
-        FT_FREE( blend->hvar_table->widthMap.innerIndex );
-        FT_FREE( blend->hvar_table->widthMap.outerIndex );
+        ft_var_done_delta_set_index_map( face,
+                                         &blend->hvar_table->widthMap );
         FT_FREE( blend->hvar_table );
       }
 
@@ -4428,8 +4437,8 @@
         ft_var_done_item_variation_store( face,
                                           &blend->vvar_table->itemStore );
 
-        FT_FREE( blend->vvar_table->widthMap.innerIndex );
-        FT_FREE( blend->vvar_table->widthMap.outerIndex );
+        ft_var_done_delta_set_index_map( face,
+                                         &blend->vvar_table->widthMap );
         FT_FREE( blend->vvar_table );
       }
 
