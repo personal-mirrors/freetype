@@ -518,6 +518,15 @@
     (FT_Set_MM_WeightVector_Func)NULL,                  /* set_mm_weightvector */
     (FT_Get_MM_WeightVector_Func)NULL,                  /* get_mm_weightvector */
 
+    (FT_Var_Load_Delta_Set_Index_Map_Func)
+                                 NULL,
+    (FT_Var_Load_Item_Variation_Store)
+                                 NULL,
+    (FT_Var_Done_Item_Variation_Store)
+                                 NULL,
+    (FT_Var_Done_Delta_Set_Index_Map)
+                                 NULL,
+
     (FT_Get_Var_Blend_Func)      tt_get_var_blend,      /* get_var_blend       */
     (FT_Done_Blend_Func)         tt_done_blend          /* done_blend          */
   )

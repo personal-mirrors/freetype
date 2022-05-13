@@ -438,7 +438,7 @@
   }
 
 
-  static FT_Error
+  FT_Error
   ft_var_load_item_variation_store( TT_Face          face,
                                     FT_ULong         offset,
                                     GX_ItemVarStore  itemStore )
@@ -670,7 +670,7 @@
   }
 
 
-  static FT_Error
+  FT_Error
   ft_var_load_delta_set_index_mapping( TT_Face            face,
                                        FT_ULong           offset,
                                        GX_DeltaSetIdxMap  map,
@@ -938,7 +938,7 @@
   }
 
 
-  static FT_Int
+  FT_Int
   ft_var_get_item_delta( TT_Face          face,
                          GX_ItemVarStore  itemStore,
                          FT_UInt          outerIndex,
@@ -4305,7 +4305,7 @@
   }
 
 
-  static void
+  void
   ft_var_done_item_variation_store( TT_Face          face,
                                     GX_ItemVarStore  itemStore )
   {
@@ -4333,7 +4333,7 @@
     }
   }
 
-  static void
+  void
   ft_var_done_delta_set_index_map( TT_Face            face,
                                    GX_DeltaSetIdxMap  deltaSetIdxMap )
   {
