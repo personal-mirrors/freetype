@@ -519,14 +519,14 @@
     (FT_Get_MM_WeightVector_Func)NULL,                  /* get_mm_weightvector */
 
     (FT_Var_Load_Delta_Set_Index_Map_Func)
-                                 NULL,
+                                 ft_var_load_delta_set_index_mapping,
     (FT_Var_Load_Item_Variation_Store)
-                                 NULL,
-    (FT_Var_Get_Item_Delta)      NULL,
+                                 ft_var_load_item_variation_store,
+    (FT_Var_Get_Item_Delta)      ft_var_get_item_delta,
     (FT_Var_Done_Item_Variation_Store)
-                                 NULL,
+                                 ft_var_done_item_variation_store,
     (FT_Var_Done_Delta_Set_Index_Map)
-                                 NULL,
+                                 ft_var_done_delta_set_index_map,
 
     (FT_Get_Var_Blend_Func)      tt_get_var_blend,      /* get_var_blend       */
     (FT_Done_Blend_Func)         tt_done_blend          /* done_blend          */
