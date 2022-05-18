@@ -438,7 +438,7 @@
   }
 
 
-  static FT_Error
+  FT_Error
   ft_var_load_item_variation_store( TT_Face          face,
                                     FT_ULong         offset,
                                     GX_ItemVarStore  itemStore )
@@ -680,7 +680,7 @@
   }
 
 
-  static FT_Error
+  FT_Error
   ft_var_load_delta_set_index_mapping( TT_Face            face,
                                        FT_ULong           offset,
                                        GX_DeltaSetIdxMap  map,
@@ -958,7 +958,7 @@
   }
 
 
-  static FT_Int
+  FT_Int
   ft_var_get_item_delta( TT_Face          face,
                          GX_ItemVarStore  itemStore,
                          FT_UInt          outerIndex,
@@ -4349,7 +4349,7 @@
   }
 
 
-  static void
+  void
   ft_var_done_item_variation_store( TT_Face          face,
                                     GX_ItemVarStore  itemStore )
   {
@@ -4377,6 +4377,15 @@
     }
   }
 
+  void
+  ft_var_done_delta_set_index_map( TT_Face            face,
+                                   GX_DeltaSetIdxMap  deltaSetIdxMap )
+  {
+    FT_Memory  memory = FT_FACE_MEMORY( face );
+
+    FT_FREE( deltaSetIdxMap->innerIndex );
+    FT_FREE( deltaSetIdxMap->outerIndex );
+  }
 
   /**************************************************************************
    *
@@ -4418,8 +4427,8 @@
         ft_var_done_item_variation_store( face,
                                           &blend->hvar_table->itemStore );
 
-        FT_FREE( blend->hvar_table->widthMap.innerIndex );
-        FT_FREE( blend->hvar_table->widthMap.outerIndex );
+        ft_var_done_delta_set_index_map( face,
+                                         &blend->hvar_table->widthMap );
         FT_FREE( blend->hvar_table );
       }
 
@@ -4428,8 +4437,8 @@
         ft_var_done_item_variation_store( face,
                                           &blend->vvar_table->itemStore );
 
-        FT_FREE( blend->vvar_table->widthMap.innerIndex );
-        FT_FREE( blend->vvar_table->widthMap.outerIndex );
+        ft_var_done_delta_set_index_map( face,
+                                         &blend->vvar_table->widthMap );
         FT_FREE( blend->vvar_table );
       }
 
