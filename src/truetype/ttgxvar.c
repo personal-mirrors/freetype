@@ -631,44 +631,25 @@
                          varData->regionIdxCount * varData->itemCount ) )
         goto Exit;
 
-      /* the delta set is stored as a 2-dimensional array of shorts */
-      if ( long_words )
+      for ( j = 0; j < varData->itemCount * varData->regionIdxCount; )
       {
-        /* new in OpenType 1.9, currently for 'COLR' table only;          */
-        /* the deltas are interpreted as 16.16 fixed-point scaling values */
-
-        /* not supported yet */
-
-        error = FT_THROW( Invalid_Table );
-        goto Exit;
-      }
-      else
-      {
-        for ( j = 0; j < varData->itemCount * varData->regionIdxCount; )
+        if ( long_words )
         {
           for ( k = 0; k < wordDeltaCount; k++, j++ )
-          {
-            /* read the short deltas */
-            FT_Short  delta;
-
-
-            if ( FT_READ_SHORT( delta ) )
+            if ( FT_READ_LONG( varData->deltaSet[j] ) )
               goto Exit;
-
-            varData->deltaSet[j] = delta;
-          }
-
           for ( ; k < varData->regionIdxCount; k++, j++ )
-          {
-            /* read the (signed) byte deltas */
-            FT_Char  delta;
-
-
-            if ( FT_READ_CHAR( delta ) )
+            if ( FT_READ_SHORT( varData->deltaSet[j] ) )
               goto Exit;
-
-            varData->deltaSet[j] = delta;
-          }
+        }
+        else
+        {
+          for ( k = 0; k < wordDeltaCount; k++, j++ )
+            if ( FT_READ_SHORT( varData->deltaSet[j] ) )
+              goto Exit;
+          for ( ; k < varData->regionIdxCount; k++, j++ )
+            if ( FT_READ_CHAR( varData->deltaSet[j] ) )
+              goto Exit;
         }
       }
     }
@@ -964,14 +945,18 @@
                          FT_UInt          outerIndex,
                          FT_UInt          innerIndex )
   {
-    GX_ItemVarData  varData;
-    FT_Short*       deltaSet;
+    GX_ItemVarData    varData;
+    FT_ItemVarDelta*  deltaSet;
 
     FT_UInt   master, j;
     FT_Fixed  netAdjustment = 0;     /* accumulated adjustment */
     FT_Fixed  scaledDelta;
     FT_Fixed  delta;
 
+    /* OpenType 1.8.4+: No variation data for this item
+     *  as indices have special value 0xFFFF. */
+    if (outerIndex == 0xFFFF && innerIndex == 0xFFFF)
+      return 0;
 
     /* See pseudo code from `Font Variations Overview' */
     /* in the OpenType specification.                  */
@@ -1148,20 +1133,12 @@
       }
     }
 
-    /* new test introduced in OpenType 1.8.4 */
-    if ( outerIndex == 0xFFFFU && innerIndex == 0xFFFFU )
-    {
-      FT_TRACE5(( "no adjustment to %s value %d\n",
-                  vertical ? "vertical height" : "horizontal width",
-                  *avalue ));
-    }
-    else
-    {
-      delta = tt_var_get_item_delta( face,
-                                     &table->itemStore,
-                                     outerIndex,
-                                     innerIndex );
+    delta = tt_var_get_item_delta( face,
+                                   &table->itemStore,
+                                   outerIndex,
+                                   innerIndex );
 
+    if ( delta ) {
       FT_TRACE5(( "%s value %d adjusted by %d unit%s (%s)\n",
                   vertical ? "vertical height" : "horizontal width",
                   *avalue,
@@ -1459,19 +1436,12 @@
       FT_Int     delta;
 
 
-      /* new test introduced in OpenType 1.8.4 */
-      if ( value->outerIndex == 0xFFFFU && value->innerIndex == 0xFFFFU )
-      {
-        /* no variation data for this item */
-        continue;
-      }
-
       delta = tt_var_get_item_delta( face,
                                      &blend->mvar_table->itemStore,
                                      value->outerIndex,
                                      value->innerIndex );
 
-      if ( p )
+      if ( p && delta )
       {
         FT_TRACE5(( "value %c%c%c%c (%d unit%s) adjusted by %d unit%s (MVAR)\n",
                     (FT_Char)( value->tag >> 24 ),
