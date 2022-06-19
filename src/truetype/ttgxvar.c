@@ -3839,25 +3839,20 @@
    *     An array with `n_points' elements that is filled with unrounded
    *     point coordinates (in 26.6 format).
    *
-   * @Input
-   *   n_points ::
-   *     The number of the points in the glyph, including
-   *     phantom points.
-   *
    * @Return:
    *   FreeType error code.  0 means success.
    */
   FT_LOCAL_DEF( FT_Error )
   TT_Vary_Apply_Glyph_Deltas( TT_Loader    loader,
                               FT_Outline*  outline,
-                              FT_Vector*   unrounded,
-                              FT_UInt      n_points )
+                              FT_Vector*   unrounded )
   {
     FT_Error   error;
     TT_Face    face = loader->face;
     FT_Stream  stream = face->root.stream;
     FT_Memory  memory = stream->memory;
     FT_UInt    glyph_index = loader->glyph_index;
+    FT_UInt    n_points = (FT_UInt)outline->n_points + 4;
 
     FT_Vector*  points_org = NULL;  /* coordinates in 16.16 format */
     FT_Vector*  points_out = NULL;  /* coordinates in 16.16 format */
@@ -4075,36 +4070,8 @@
           FT_Fixed  point_delta_y = FT_MulFix( deltas_y[j], apply );
 
 
-          if ( j < n_points - 4 )
-          {
-            point_deltas_x[j] = old_point_delta_x + point_delta_x;
-            point_deltas_y[j] = old_point_delta_y + point_delta_y;
-          }
-          else
-          {
-            /* To avoid double adjustment of advance width or height, */
-            /* adjust phantom points only if there is no HVAR or VVAR */
-            /* support, respectively.                                 */
-            if ( j == ( n_points - 4 )        &&
-                 !( face->variation_support &
-                    TT_FACE_FLAG_VAR_LSB    ) )
-              point_deltas_x[j] = old_point_delta_x + point_delta_x;
-
-            else if ( j == ( n_points - 3 )          &&
-                      !( face->variation_support   &
-                         TT_FACE_FLAG_VAR_HADVANCE ) )
-              point_deltas_x[j] = old_point_delta_x + point_delta_x;
-
-            else if ( j == ( n_points - 2 )        &&
-                      !( face->variation_support &
-                         TT_FACE_FLAG_VAR_TSB    ) )
-              point_deltas_y[j] = old_point_delta_y + point_delta_y;
-
-            else if ( j == ( n_points - 1 )          &&
-                      !( face->variation_support   &
-                         TT_FACE_FLAG_VAR_VADVANCE ) )
-              point_deltas_y[j] = old_point_delta_y + point_delta_y;
-          }
+          point_deltas_x[j] = old_point_delta_x + point_delta_x;
+          point_deltas_y[j] = old_point_delta_y + point_delta_y;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
           if ( point_delta_x || point_delta_y )
@@ -4177,36 +4144,8 @@
           FT_Pos  point_delta_y = points_out[j].y - points_org[j].y;
 
 
-          if ( j < n_points - 4 )
-          {
-            point_deltas_x[j] = old_point_delta_x + point_delta_x;
-            point_deltas_y[j] = old_point_delta_y + point_delta_y;
-          }
-          else
-          {
-            /* To avoid double adjustment of advance width or height, */
-            /* adjust phantom points only if there is no HVAR or VVAR */
-            /* support, respectively.                                 */
-            if ( j == ( n_points - 4 )        &&
-                 !( face->variation_support &
-                    TT_FACE_FLAG_VAR_LSB    ) )
-              point_deltas_x[j] = old_point_delta_x + point_delta_x;
-
-            else if ( j == ( n_points - 3 )          &&
-                      !( face->variation_support   &
-                         TT_FACE_FLAG_VAR_HADVANCE ) )
-              point_deltas_x[j] = old_point_delta_x + point_delta_x;
-
-            else if ( j == ( n_points - 2 )        &&
-                      !( face->variation_support &
-                         TT_FACE_FLAG_VAR_TSB    ) )
-              point_deltas_y[j] = old_point_delta_y + point_delta_y;
-
-            else if ( j == ( n_points - 1 )          &&
-                      !( face->variation_support   &
-                         TT_FACE_FLAG_VAR_VADVANCE ) )
-              point_deltas_y[j] = old_point_delta_y + point_delta_y;
-          }
+          point_deltas_x[j] = old_point_delta_x + point_delta_x;
+          point_deltas_y[j] = old_point_delta_y + point_delta_y;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
           if ( point_delta_x || point_delta_y )
@@ -4244,6 +4183,24 @@
 
     FT_TRACE5(( "\n" ));
 
+    /* To avoid double adjustment of advance width or height, */
+    /* do not move phantom points if there is HVAR or VVAR    */
+    /* support, respectively.                                 */
+    if ( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE )
+    {
+      point_deltas_x[n_points - 4] = 0;
+      point_deltas_y[n_points - 4] = 0;
+      point_deltas_x[n_points - 3] = 0;
+      point_deltas_y[n_points - 3] = 0;
+    }
+    if ( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE )
+    {
+      point_deltas_x[n_points - 2] = 0;
+      point_deltas_y[n_points - 2] = 0;
+      point_deltas_x[n_points - 1] = 0;
+      point_deltas_y[n_points - 1] = 0;
+    }
+
     for ( i = 0; i < n_points; i++ )
     {
       unrounded[i].x += FT_fixedToFdot6( point_deltas_x[i] );
@@ -4253,14 +4210,23 @@
       outline->points[i].y += FT_fixedToInt( point_deltas_y[i] );
     }
 
-    /* recalculate linear horizontal and vertical advances */
-    /* if we don't have HVAR and VVAR, respectively        */
+    /* To avoid double adjustment of advance width or height, */
+    /* adjust phantom points only if there is no HVAR or VVAR */
+    /* support, respectively.                                 */
     if ( !( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
+    {
+      loader->pp1      = outline->points[n_points - 4];
+      loader->pp2      = outline->points[n_points - 3];
       loader->linear   = FT_PIX_ROUND( unrounded[n_points - 3].x -
                                        unrounded[n_points - 4].x ) / 64;
+    }
     if ( !( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
+    {
+      loader->pp3      = outline->points[n_points - 2];
+      loader->pp4      = outline->points[n_points - 1];
       loader->vadvance = FT_PIX_ROUND( unrounded[n_points - 1].y -
                                        unrounded[n_points - 2].y ) / 64;
+    }
 
   Fail3:
     FT_FREE( point_deltas_x );
