@@ -80,6 +80,7 @@
 #define OVERLAP_COMPOUND           0x0400  /* retained as FT_OUTLINE_OVERLAP */
 #define SCALED_COMPONENT_OFFSET    0x0800
 #define UNSCALED_COMPONENT_OFFSET  0x1000
+#define GID_IS_24BIT               0x2000
 
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
@@ -628,6 +629,13 @@
 
       subglyph->flags = FT_NEXT_USHORT( p );
       subglyph->index = FT_NEXT_USHORT( p );
+
+      if ( subglyph->flags & GID_IS_24BIT )
+      {
+        if ( p + 5 > limit )
+          goto Invalid_Composite;
+        subglyph->index = (subglyph->index << 8) | FT_NEXT_CHAR ( p );
+      }
 
       /* we reject composites that have components */
       /* with invalid glyph indices                */
