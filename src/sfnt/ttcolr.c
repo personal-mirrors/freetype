@@ -1362,7 +1362,7 @@
     clip_list_format = FT_NEXT_BYTE ( p );
 
     /* Format byte used here to be able to upgrade ClipList for >16bit */
-    /* glyph ids; for now we can expect it to be 0.                    */
+    /* glyph ids; for now we can expect it to be 1.                    */
     if ( !( clip_list_format == 1 ) )
       return 0;
 
@@ -1382,6 +1382,14 @@
 
       if ( base_glyph >= gid_start && base_glyph <= gid_end )
       {
+        FT_ULong         var_index_base  = 0;
+        /* varIndexBase offset for clipbox is 3 at most. */
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+        FT_ItemVarDelta  item_deltas[4]  = { 0, 0, 0, 0 };
+        FT_Bool          do_read_var     = FALSE;
+#endif
+
+
         p1 = (FT_Byte*)( clip_base + clip_box_offset );
 
         /* Check whether we can extract one `uint8`. */
@@ -1390,8 +1398,10 @@
 
         format = FT_NEXT_BYTE( p1 );
 
-        if ( format > 1 )
+        if ( format > 2 )
           return 0;
+
+        do_read_var = format == 2;
 
         /* Check whether we can extract four `FWORD`. */
         if ( p1 > limit - ( 2 + 2 + 2 + 2 ) )
@@ -1409,6 +1419,30 @@
                                         face->root.size->metrics.x_scale );
         font_clip_box.yMax = FT_MulFix( FT_NEXT_SHORT( p1 ),
                                         face->root.size->metrics.y_scale );
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+        if ( VARIABLE_COLRV1_ENABLED && do_read_var )
+        {
+          /* Check whether we can extract a 32-bit VarIdxBase now. */
+          if ( p1 > limit - 4 )
+            return 0;
+
+          var_index_base = FT_NEXT_ULONG( p1 );
+
+          if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 4,
+                                               item_deltas ) )
+            return 0;
+
+          font_clip_box.xMin +=
+              FT_MulFix( item_deltas[0], face->root.size->metrics.x_scale );
+          font_clip_box.yMin +=
+              FT_MulFix( item_deltas[1], face->root.size->metrics.y_scale );
+          font_clip_box.xMax +=
+              FT_MulFix( item_deltas[2], face->root.size->metrics.x_scale );
+          font_clip_box.yMax +=
+              FT_MulFix( item_deltas[3], face->root.size->metrics.y_scale );
+        }
+#endif
 
 
         /* Make 4 corner points (xMin, yMin), (xMax, yMax) and transform */
