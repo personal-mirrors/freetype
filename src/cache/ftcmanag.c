@@ -382,6 +382,7 @@
 
     manager->library      = library;
     manager->memory       = memory;
+    manager->cur_weight   = 0;
     manager->max_weight   = max_bytes;
     manager->cur_weight   = 0;
 
