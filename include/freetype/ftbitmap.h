@@ -47,14 +47,6 @@ FT_BEGIN_HEADER
    * @description:
    *   This section contains functions for handling @FT_Bitmap objects,
    *   automatically adjusting the target's bitmap buffer size as needed.
-   *
-   *   Note that none of the functions changes the bitmap's 'flow' (as
-   *   indicated by the sign of the `pitch` field in @FT_Bitmap).
-   *
-   *   To set the flow, assign an appropriate positive or negative value to
-   *   the `pitch` field of the target @FT_Bitmap object after calling
-   *   @FT_Bitmap_Init but before calling any of the other functions
-   *   described here.
    */
 
 
@@ -105,8 +97,14 @@ FT_BEGIN_HEADER
    *   FreeType error code.  0~means success.
    *
    * @note:
-   *   `source->buffer` and `target->buffer` must neither be equal nor
-   *   overlap.
+   *   This function reallocates the memory in the target bitmap, which has
+   *   to be valid, either initialized by @FT_Bitmap_Init or reused multiple
+   *   times. `source->buffer` and `target->buffer` must neither be equal
+   *   nor overlap.  Use @FT_Bitmap_Done to finally remove the bitmap object.
+   *
+   *   The source and target bitmaps can have different flows if their
+   *   pitches are set to opposite signs before calling this function.
+   *   Otherwise, the flow is preserved.
    */
   FT_EXPORT( FT_Error )
   FT_Bitmap_Copy( FT_Library        library,
@@ -178,8 +176,8 @@ FT_BEGIN_HEADER
    *     The source bitmap.
    *
    *   alignment ::
-   *     The pitch of the bitmap is a multiple of this argument.  Common
-   *     values are 1, 2, or 4.
+   *     The pitch of the target bitmap is a multiple of this argument.
+   *     Common values are 1, 2, or 4.
    *
    * @output:
    *   target ::
@@ -189,16 +187,16 @@ FT_BEGIN_HEADER
    *   FreeType error code.  0~means success.
    *
    * @note:
-   *   It is possible to call @FT_Bitmap_Convert multiple times without
-   *   calling @FT_Bitmap_Done (the memory is simply reallocated).
+   *   This function reallocates the memory in the target bitmap, which has
+   *   to be valid, either initialized by @FT_Bitmap_Init or reused multiple
+   *   times. `source->buffer` and `target->buffer` must neither be equal
+   *   nor overlap.  Use @FT_Bitmap_Done to finally remove the bitmap object.
    *
-   *   Use @FT_Bitmap_Done to finally remove the bitmap object.
+   *   Negative alignment values produce bottom-up bitmaps with negative
+   *   pitch.  Zero alignment is treated as one, i.e., no padding is used.
    *
    *   The `library` argument is taken to have access to FreeType's memory
    *   handling functions.
-   *
-   *   `source->buffer` and `target->buffer` must neither be equal nor
-   *   overlap.
    */
   FT_EXPORT( FT_Error )
   FT_Bitmap_Convert( FT_Library        library,
