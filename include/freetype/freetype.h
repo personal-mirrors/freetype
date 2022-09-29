@@ -2594,7 +2594,7 @@ FT_BEGIN_HEADER
    */
   FT_EXPORT( FT_Error )
   FT_Attach_Stream( FT_Face        face,
-                    FT_Open_Args*  parameters );
+                    const FT_Open_Args*  parameters );
 
 
   /**************************************************************************
