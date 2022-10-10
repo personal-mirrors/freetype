@@ -56,6 +56,14 @@
 
 FT_BEGIN_HEADER
 
+
+/* sin(12)=0.2, 0.2*0x10000L=0x0366AL                                      */
+#define DEFAULT_OBLIQUE_VALUE 0x0366AL
+
+/* A new api with short name.                                              */
+#define FT_GlyphSlot_Slant( slot, oblique ) \
+  FT_GlyphSlot_Oblique_By_Value( slot, oblique );
+
   /* Embolden a glyph by a 'reasonable' value (which is highly a matter of */
   /* taste).  This function is actually a convenience function, providing  */
   /* a wrapper for @FT_Outline_Embolden and @FT_Bitmap_Embolden.           */
@@ -68,9 +76,13 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot );
 
-  /* Slant an outline glyph to the right by about 12 degrees. */
+  /* Slant an outline glyph to the right by about 12 degrees.              */
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );
+
+  /* Slant an outline glyph to the right by any value.                     */
+  FT_EXPORT( void )
+  FT_GlyphSlot_Oblique_By_Value( FT_GlyphSlot  slot, FT_Fixed oblique );
 
   /* */
 
