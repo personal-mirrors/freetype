@@ -69,6 +69,10 @@
               &tt_driver_class                                          && \
             ((TT_Driver)FT_FACE_DRIVER( face ))->enable_variable_colrv1 )
 
+#define ENSURE_READ_BYTES( byte_size )                            \
+  if ( p < colr->paints_start_v1 ||                               \
+       p > (FT_Byte*)colr->table + colr->table_size - byte_size ) \
+    return 0;
 
   typedef enum  FT_PaintFormat_Internal_
   {
@@ -695,6 +699,8 @@
               (FT_PaintFormat_Internal)apaint->format ==
                   FT_COLR_PAINTFORMAT_INTERNAL_VAR_SOLID  )
     {
+      ENSURE_READ_BYTES( 4 );
+
       apaint->u.solid.color.palette_index = FT_NEXT_USHORT( p );
       apaint->u.solid.color.alpha         = FT_NEXT_SHORT( p );
 
@@ -703,6 +709,8 @@
                FT_COLR_PAINTFORMAT_INTERNAL_VAR_SOLID &&
            VARIABLE_COLRV1_ENABLED                    )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 1,
@@ -720,6 +728,8 @@
 
     else if ( apaint->format == FT_COLR_PAINTFORMAT_COLR_GLYPH )
     {
+      ENSURE_READ_BYTES(2);
+
       apaint->u.colr_glyph.glyphID = FT_NEXT_USHORT( p );
 
       return 1;
@@ -745,6 +755,8 @@
                              do_read_var ) )
         return 0;
 
+      ENSURE_READ_BYTES( 12 );
+
       /*
        * In order to support variations expose these as FT_Fixed 16.16 values so
        * that we can support fractional values after interpolation.
@@ -759,6 +771,8 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
       if ( do_read_var && VARIABLE_COLRV1_ENABLED )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG ( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 6,
@@ -792,6 +806,8 @@
                              do_read_var ) )
         return 0;
 
+      ENSURE_READ_BYTES( 12 );
+
       /* In the OpenType specification, `r0` and `r1` are defined as   */
       /* `UFWORD`.  Since FreeType doesn't have a corresponding 16.16  */
       /* format we convert to `FWORD` and replace negative values with */
@@ -812,6 +828,8 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
       if ( do_read_var && VARIABLE_COLRV1_ENABLED )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG ( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 6,
@@ -846,6 +864,8 @@
                              do_read_var) )
         return 0;
 
+      ENSURE_READ_BYTES( 8 );
+
       apaint->u.sweep_gradient.center.x =
           INT_TO_FIXED( FT_NEXT_SHORT( p ) );
       apaint->u.sweep_gradient.center.y =
@@ -859,6 +879,8 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
       if ( do_read_var && VARIABLE_COLRV1_ENABLED )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG ( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 4,
@@ -882,6 +904,8 @@
 
     if ( apaint->format == FT_COLR_PAINTFORMAT_GLYPH )
     {
+      ENSURE_READ_BYTES( 2 );
+
       apaint->u.glyph.paint.p                     = child_table_p;
       apaint->u.glyph.paint.insert_root_transform = 0;
       apaint->u.glyph.glyphID                     = FT_NEXT_USHORT( p );
@@ -901,6 +925,8 @@
 
       p = child_table_p;
 
+      ENSURE_READ_BYTES( 24 );
+
       /*
        * The following matrix coefficients are encoded as
        * OpenType 16.16 fixed-point values.
@@ -917,6 +943,8 @@
              FT_COLR_PAINTFORMAT_INTERNAL_VAR_TRANSFORM &&
            VARIABLE_COLRV1_ENABLED                      )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 6,
@@ -944,6 +972,8 @@
       apaint->u.translate.paint.p                     = child_table_p;
       apaint->u.translate.paint.insert_root_transform = 0;
 
+      ENSURE_READ_BYTES( 4 );
+
       apaint->u.translate.dx = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
       apaint->u.translate.dy = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
 
@@ -952,6 +982,8 @@
              FT_COLR_PAINTFORMAT_INTERNAL_VAR_TRANSLATE &&
            VARIABLE_COLRV1_ENABLED                      )
       {
+        ENSURE_READ_BYTES( 4 );
+
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( !get_deltas_for_var_index_base( face, colr, var_index_base, 2,
@@ -975,6 +1007,8 @@
       apaint->u.scale.paint.p                     = child_table_p;
       apaint->u.scale.paint.insert_root_transform = 0;
 
+      ENSURE_READ_BYTES( 2 );
+
       /* All scale paints get at least one scale value. */
       apaint->u.scale.scale_x = F2DOT14_TO_FIXED( FT_NEXT_SHORT( p ) );
 
@@ -985,10 +1019,14 @@
            (FT_PaintFormat_Internal)apaint->format ==
              FT_COLR_PAINTFORMAT_INTERNAL_SCALE_CENTER     ||
            (FT_PaintFormat_Internal)apaint->format ==
-             FT_COLR_PAINTFORMAT_INTERNAL_VAR_SCALE_CENTER )
+             FT_COLR_PAINTFORMAT_INTERNAL_VAR_SCALE_CENTER ) {
+        ENSURE_READ_BYTES( 2 );
         apaint->u.scale.scale_y = F2DOT14_TO_FIXED( FT_NEXT_SHORT( p ) );
+      }
       else
+      {
         apaint->u.scale.scale_y = apaint->u.scale.scale_x;
+      }
 
       /* Scale paints that have a center read center coordinates, */
       /* otherwise the center is (0,0).                           */
@@ -1001,6 +1039,7 @@
            (FT_PaintFormat_Internal)apaint->format ==
              FT_COLR_PAINTFORMAT_INTERNAL_VAR_SCALE_UNIFORM_CENTER )
       {
+        ENSURE_READ_BYTES( 4 );
         apaint->u.scale.center_x = INT_TO_FIXED( FT_NEXT_SHORT ( p ) );
         apaint->u.scale.center_y = INT_TO_FIXED( FT_NEXT_SHORT ( p ) );
       }
@@ -1023,6 +1062,7 @@
                FT_COLR_PAINTFORMAT_INTERNAL_VAR_SCALE_UNIFORM_CENTER ) &&
            VARIABLE_COLRV1_ENABLED                                     )
       {
+        ENSURE_READ_BYTES( 4 );
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( (FT_PaintFormat_Internal)apaint->format ==
@@ -1093,6 +1133,7 @@
       apaint->u.rotate.paint.p                     = child_table_p;
       apaint->u.rotate.paint.insert_root_transform = 0;
 
+      ENSURE_READ_BYTES( 2 );
       apaint->u.rotate.angle = F2DOT14_TO_FIXED( FT_NEXT_SHORT( p ) );
 
       if ( (FT_PaintFormat_Internal)apaint->format ==
@@ -1100,6 +1141,7 @@
            (FT_PaintFormat_Internal)apaint->format ==
              FT_COLR_PAINTFORMAT_INTERNAL_VAR_ROTATE_CENTER )
       {
+        ENSURE_READ_BYTES( 4 );
         apaint->u.rotate.center_x = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
         apaint->u.rotate.center_y = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
       }
@@ -1119,6 +1161,7 @@
         FT_UInt  num_deltas = 0;
 
 
+        ENSURE_READ_BYTES( 4 );
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( (FT_PaintFormat_Internal)apaint->format ==
@@ -1162,6 +1205,7 @@
       apaint->u.skew.paint.p                     = child_table_p;
       apaint->u.skew.paint.insert_root_transform = 0;
 
+      ENSURE_READ_BYTES( 4 );
       apaint->u.skew.x_skew_angle = F2DOT14_TO_FIXED( FT_NEXT_SHORT( p ) );
       apaint->u.skew.y_skew_angle = F2DOT14_TO_FIXED( FT_NEXT_SHORT( p ) );
 
@@ -1170,6 +1214,7 @@
            (FT_PaintFormat_Internal)apaint->format ==
              FT_COLR_PAINTFORMAT_INTERNAL_VAR_SKEW_CENTER )
       {
+        ENSURE_READ_BYTES( 4 );
         apaint->u.skew.center_x = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
         apaint->u.skew.center_y = INT_TO_FIXED( FT_NEXT_SHORT( p ) );
       }
@@ -1187,6 +1232,7 @@
                FT_COLR_PAINTFORMAT_INTERNAL_VAR_SKEW_CENTER ) &&
            VARIABLE_COLRV1_ENABLED                            )
       {
+        ENSURE_READ_BYTES( 4 );
         var_index_base = FT_NEXT_ULONG( p );
 
         if ( (FT_PaintFormat_Internal)apaint->format ==
@@ -1228,6 +1274,7 @@
       apaint->u.composite.source_paint.p                     = child_table_p;
       apaint->u.composite.source_paint.insert_root_transform = 0;
 
+      ENSURE_READ_BYTES( 1 );
       composite_mode = FT_NEXT_BYTE( p );
       if ( composite_mode >= FT_COLR_COMPOSITE_MAX )
         return 0;
