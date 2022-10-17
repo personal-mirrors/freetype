@@ -46,6 +46,12 @@
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot )
   {
+    FT_GlyphSlot_Oblique_By_Value(slot, DEFAULT_OBLIQUE_VALUE);
+  }
+
+  FT_EXPORT_DEF( void )
+  FT_GlyphSlot_Oblique_By_Value( FT_GlyphSlot  slot, FT_Fixed oblique )
+  {
     FT_Matrix    transform;
     FT_Outline*  outline;
 
@@ -61,13 +67,14 @@
 
     /* we don't touch the advance width */
 
-    /* For italic, simply apply a shear transform, with an angle */
-    /* of about 12 degrees.                                      */
+    /* For italic, simply apply a shear transform, with an angle of */
+    /* about 12.0 degrees. then transform.xy = 0x0366AL             */
+    /* about 20.5 degrees. then transform.xy = 0x0599AL             */
 
     transform.xx = 0x10000L;
     transform.yx = 0x00000L;
 
-    transform.xy = 0x0366AL;
+    transform.xy = oblique;
     transform.yy = 0x10000L;
 
     FT_Outline_Transform( outline, &transform );
