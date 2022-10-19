@@ -438,6 +438,216 @@
     return FT_Err_Ok;
   }
 
+  static FT_Long 
+  ft_bitmap_slant_get_offset( FT_Long height,
+                              FT_Fixed slant )
+  {
+    height = FT_MulFix( height << 16, slant );
+    return (FT_RoundFix( height ) >> 16);
+  }
+
+  static void
+  ft_bitmap_slant_a_row( FT_Bitmap*   src_bitmap,
+                         FT_Bitmap*   dst_bitmap,
+                         FT_Int       j,
+                         FT_Long      offset )
+  {
+    FT_Int          i;
+    FT_Int          offset_byte;
+    FT_Int          offset_bit;
+
+    unsigned char*  data_buffer;
+
+    data_buffer  = src_bitmap->buffer + j*dst_bitmap->pitch;
+
+    offset_byte = (offset >> 3);
+    offset_bit  = (offset &  0x07);
+
+    /* if offset is 0/8/16, copy it directly. */
+    if ( offset_bit == 0 )
+    {
+      for ( i=src_bitmap->pitch-1; i>=0; i--)
+      {
+        data_buffer[i+offset_byte] = data_buffer[i];
+      }
+
+      /* clean no use data */
+      for ( i=0; i<offset_byte; i++ )
+      {
+        data_buffer[i] = 0;
+      }
+      return;
+    }
+
+    /* src_buffer last  byte : src_buffer[src_bitmap->pitch-1] */
+    i = src_bitmap->pitch;
+    if ( i+offset_byte < dst_bitmap->pitch )
+    {
+        data_buffer[i+offset_byte] = (data_buffer[i-1] << (8-offset_bit));
+    }
+
+    for ( i=src_bitmap->pitch-1; i>0; i-- )
+    {
+      data_buffer[i+offset_byte] = (data_buffer[i  ] >>    offset_bit)
+                                 | (data_buffer[i-1] << (8-offset_bit));
+    }
+
+    /* src_buffer first byte : src_buffer[0] */
+    data_buffer[offset_byte] = (data_buffer[0] >> offset_bit);
+
+    /* clean no use data */
+    for ( i=0; i<offset_byte; i++ )
+    {
+      data_buffer[i] = 0;
+    }
+
+  }
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Bitmap_Slant( FT_GlyphSlot slot,
+                   FT_Bitmap*   bitmap,
+                   FT_Fixed     slant )
+  {
+    FT_Error        error  = FT_Err_Ok;
+    FT_Memory       memory;
+
+    FT_Int          above_height, below_height;
+    FT_Int          above_slant,  below_slant;
+    FT_UInt         new_size;
+    FT_Int          j;
+    FT_Int          block_rows;
+    FT_Int          block_start;
+    FT_Long         offset;
+
+    FT_Bitmap       new_bitmap = {0};
+
+
+    if ( !slot)
+      return FT_THROW( Invalid_Slot_Handle );
+    if ( !slot->library )
+      return FT_THROW( Invalid_Library_Handle );
+
+    if ( !bitmap || !bitmap->buffer )
+      return FT_THROW( Invalid_Argument );
+
+    if ( bitmap->pixel_mode != FT_PIXEL_MODE_MONO )
+    {
+      return FT_Err_Ok;
+    }
+
+    memory = slot->library->memory;
+
+    FT_MEM_COPY( (&new_bitmap), bitmap, sizeof( FT_Bitmap ) );
+
+    /* get slant value above baseline */
+    if ( slot->bitmap_top > 0 )
+    {
+      above_height = slot->bitmap_top-1;
+      above_slant  = ft_bitmap_slant_get_offset( above_height, slant );
+    }
+    else
+    {
+      above_height = 0;
+      above_slant  = 0;
+    }
+
+    /* get slant value below baseline. 
+     * For relationthips between rows and top:
+     * rows > top: if() OK.
+     * rows = top: else is OK.
+     * rows < top: else is OK. */
+    if ( bitmap->rows > slot->bitmap_top )
+    {
+      below_height = bitmap->rows - slot->bitmap_top;
+      below_slant  = ft_bitmap_slant_get_offset( below_height, slant );
+    }
+    else
+    {
+      below_height = 0;
+      below_slant  = 0;
+    }
+
+    if ( (above_slant + below_slant) == 0 )
+    {
+      return FT_Err_Ok;
+    }
+
+    /* adjust left position */
+    slot->bitmap_left -= below_slant;
+
+    new_bitmap.width +=  new_bitmap.width + (above_slant + below_slant);
+    new_bitmap.pitch  = (new_bitmap.width + 7) >> 3;
+    if (bitmap->pitch != new_bitmap.pitch)
+    {
+      new_size = new_bitmap.pitch*new_bitmap.rows;
+      if ( FT_ALLOC( new_bitmap.buffer, new_size ) )
+        return error;
+
+      for ( j=0; j<bitmap->rows; j++)
+      {
+          FT_MEM_COPY( new_bitmap.buffer + j*new_bitmap.pitch,
+                          bitmap->buffer + j*   bitmap->pitch,
+                       bitmap->pitch );
+      }
+
+      FT_FREE( bitmap->buffer );
+      bitmap->buffer = new_bitmap.buffer;
+    }
+
+    /*
+     * Slant above rows.
+     * Slant from row above baseline, then up to top.
+     */
+    if ( above_height > 0 )
+    {
+      if (slot->bitmap_top < bitmap->rows)
+      {
+        block_rows  = above_height;
+        block_start = 0;
+      }
+      else
+      {
+        block_rows  = bitmap->rows;
+        block_start = slot->bitmap_top - bitmap->rows;
+      }
+
+      for ( j = block_rows-1; j >= 0; j -- )
+      {
+        offset = ft_bitmap_slant_get_offset( block_rows - j + block_start,
+                 slant ) + below_slant;
+        ft_bitmap_slant_a_row( bitmap, (&new_bitmap), j, offset );
+      }
+    }
+
+    /* 
+     * if rows  < top, there is no baseline and below line.
+     * if rows == top, the baseline is last one, needn't move.
+     * if rows  > top, slant baseline and below rows together. As result:
+     *   baseline: move below_slant.
+     *   last row: move 0.
+     */
+    if ( bitmap->rows >= slot->bitmap_top )
+    {
+      /* Slant baseline row */
+      block_start = bitmap->rows - below_height - 1;
+      ft_bitmap_slant_a_row( bitmap, (&new_bitmap), block_start, below_slant );
+
+      /* Slant below rows
+       * Slant from below baseline, then down to bottom.
+       */
+      block_start ++;
+      for ( j = 0; j < below_height; j ++ )
+      {
+        offset = below_slant - ft_bitmap_slant_get_offset( j + 1, slant );
+        ft_bitmap_slant_a_row( bitmap, (&new_bitmap), j + block_start, offset );
+      }
+    }
+
+    bitmap->width  = new_bitmap.width;
+    bitmap->pitch  = new_bitmap.pitch;
+
+    return FT_Err_Ok;
+  }
 
   static FT_Byte
   ft_gray_for_premultiplied_srgb_bgra( const FT_Byte*  bgra )
