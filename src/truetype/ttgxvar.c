@@ -357,11 +357,15 @@
     FT_Memory       memory = stream->memory;
     GX_Blend        blend  = face->blend;
     GX_AVarSegment  segment;
+    GX_AVarTable    table;
     FT_Error        error;
     FT_Long         version;
     FT_Long         axisCount;
     FT_Int          i, j;
+    FT_ULong        table_offset;
     FT_ULong        table_len;
+    FT_ULong        store_offset;
+    FT_ULong        axisMap_offset;
 
 
     FT_TRACE2(( "AVAR " ));
@@ -374,13 +378,15 @@
       return;
     }
 
+    table_offset = FT_STREAM_POS();
+
     if ( FT_FRAME_ENTER( table_len ) )
       return;
 
     version   = FT_GET_LONG();
     axisCount = FT_GET_LONG();
 
-    if ( version != 0x00010000L )
+    if ( version != 0x00010000L && version != 0x00020000L )
     {
       FT_TRACE2(( "bad table version\n" ));
       goto Exit;
@@ -396,10 +402,14 @@
       goto Exit;
     }
 
-    if ( FT_QNEW_ARRAY( blend->avar_segment, axisCount ) )
+    if ( FT_NEW( blend->avar_table ) )
+      goto Exit;
+    table = blend->avar_table;
+
+    if ( FT_QNEW_ARRAY( table->avar_segment, axisCount ) )
       goto Exit;
 
-    segment = &blend->avar_segment[0];
+    segment = &table->avar_segment[0];
     for ( i = 0; i < axisCount; i++, segment++ )
     {
       FT_TRACE5(( "  axis %d:\n", i ));
@@ -412,9 +422,9 @@
         /* it right now since loading the `avar' table is optional.   */
 
         for ( j = i - 1; j >= 0; j-- )
-          FT_FREE( blend->avar_segment[j].correspondence );
+          FT_FREE( table->avar_segment[j].correspondence );
 
-        FT_FREE( blend->avar_segment );
+        FT_FREE( table->avar_segment );
         goto Exit;
       }
 
@@ -432,6 +442,35 @@
 
       FT_TRACE5(( "\n" ));
     }
+
+    if ( version < 0x00020000L )
+      goto Exit;
+
+    axisMap_offset = FT_GET_ULONG();
+    store_offset = FT_GET_ULONG();
+
+    if ( store_offset )
+    {
+      error = tt_var_load_item_variation_store(
+                face,
+                table_offset + store_offset,
+                &table->itemStore );
+      if ( error )
+        goto Exit;
+    }
+
+    if ( axisMap_offset )
+    {
+      error = tt_var_load_delta_set_index_mapping(
+                face,
+                table_offset + axisMap_offset,
+                &table->axisMap,
+                &table->itemStore,
+                table_len );
+      if ( error )
+        goto Exit;
+    }
+
 
   Exit:
     FT_FRAME_EXIT();
@@ -513,7 +552,7 @@
          FT_READ_USHORT( itemStore->regionCount ) )
       goto Exit;
 
-    if ( itemStore->axisCount != (FT_Long)blend->mmvar->num_axis )
+    if (0 && itemStore->axisCount != (FT_Long)blend->mmvar->num_axis )
     {
       FT_TRACE2(( "tt_var_load_item_variation_store:"
                   " number of axes in item variation store\n" ));
@@ -888,12 +927,15 @@
       table = blend->hvar_table;
     }
 
-    error = tt_var_load_item_variation_store(
-              face,
-              table_offset + store_offset,
-              &table->itemStore );
-    if ( error )
-      goto Exit;
+    if ( store_offset )
+    {
+      error = tt_var_load_item_variation_store(
+                face,
+                table_offset + store_offset,
+                &table->itemStore );
+      if ( error )
+        goto Exit;
+    }
 
     if ( widthMap_offset )
     {
@@ -1626,7 +1668,7 @@
       goto Exit;
     }
 
-    if ( gvar_head.axisCount != (FT_UShort)blend->mmvar->num_axis )
+    if (0 && gvar_head.axisCount != (FT_UShort)blend->mmvar->num_axis )
     {
       FT_TRACE1(( "ft_var_load_gvar:"
                   " number of axes in `gvar' and `cvar'\n" ));
@@ -1924,11 +1966,15 @@
                         FT_Fixed*  coords,
                         FT_Fixed*  normalized )
   {
+    FT_Memory       memory     = face->root.memory;
+    FT_Error        error      = FT_Err_Ok;
     GX_Blend        blend;
     FT_MM_Var*      mmvar;
     FT_UInt         i, j;
     FT_Var_Axis*    a;
     GX_AVarSegment  av;
+    FT_Fixed*       new_normalized;
+    FT_Fixed*       old_normalized;
 
 
     blend = face->blend;
@@ -1980,30 +2026,86 @@
     for ( ; i < mmvar->num_axis; i++ )
       normalized[i] = 0;
 
-    if ( blend->avar_segment )
+    if ( blend->avar_table )
     {
+      GX_AVarTable    table = blend->avar_table;
+
       FT_TRACE5(( "normalized design coordinates"
                   " before applying `avar' data:\n" ));
 
-      av = blend->avar_segment;
-      for ( i = 0; i < mmvar->num_axis; i++, av++ )
+      if (table->avar_segment)
       {
-        for ( j = 1; j < (FT_UInt)av->pairCount; j++ )
+        av = table->avar_segment;
+        for ( i = 0; i < mmvar->num_axis; i++, av++ )
         {
-          if ( normalized[i] < av->correspondence[j].fromCoord )
+          for ( j = 1; j < (FT_UInt)av->pairCount; j++ )
           {
-            FT_TRACE5(( "  %.5f\n", normalized[i] / 65536.0 ));
+            if ( normalized[i] < av->correspondence[j].fromCoord )
+            {
+              FT_TRACE5(( "  %.5f\n", normalized[i] / 65536.0 ));
 
-            normalized[i] =
-              FT_MulDiv( normalized[i] - av->correspondence[j - 1].fromCoord,
-                         av->correspondence[j].toCoord -
-                           av->correspondence[j - 1].toCoord,
-                         av->correspondence[j].fromCoord -
-                           av->correspondence[j - 1].fromCoord ) +
-              av->correspondence[j - 1].toCoord;
-            break;
+              normalized[i] =
+                FT_MulDiv( normalized[i] - av->correspondence[j - 1].fromCoord,
+                           av->correspondence[j].toCoord -
+                             av->correspondence[j - 1].toCoord,
+                           av->correspondence[j].fromCoord -
+                             av->correspondence[j - 1].fromCoord ) +
+                av->correspondence[j - 1].toCoord;
+              break;
+            }
           }
         }
+      }
+
+      if (table->itemStore.varData)
+      {
+        if ( FT_QNEW_ARRAY( new_normalized, mmvar->num_axis ) )
+          return;
+
+        /* Install our half-normalized coordinates for the next
+         * item_variation_store to work with. */
+        old_normalized = face->blend->normalizedcoords;
+        face->blend->normalizedcoords = normalized;
+
+        for ( i = 0; i < mmvar->num_axis; i++ )
+        {
+          FT_Fixed v = normalized[i];
+          FT_UInt   innerIndex = i, outerIndex = 0;
+          FT_Int    delta;
+
+          if ( table->axisMap.innerIndex )
+          {
+            FT_UInt  idx = i;
+
+            if ( idx >= table->axisMap.mapCount )
+              idx = table->axisMap.mapCount - 1;
+
+            outerIndex = table->axisMap.outerIndex[idx];
+            innerIndex = table->axisMap.innerIndex[idx];
+          }
+
+          delta = tt_var_get_item_delta( face,
+                                         &table->itemStore,
+                                         outerIndex,
+                                         innerIndex );
+
+	  v += delta << 2;
+
+	  /* Clamp */
+	  v = v >=  0x10000L ?  0x10000 : v;
+	  v = v <= -0x10000L ? -0x10000 : v;
+
+          new_normalized[i] = v;
+        }
+
+        for ( i = 0; i < mmvar->num_axis; i++ )
+        {
+          normalized[i] = new_normalized[i];
+        }
+
+        face->blend->normalizedcoords = old_normalized;
+
+        FT_FREE( new_normalized );
       }
     }
   }
@@ -2041,9 +2143,9 @@
     for ( ; i < num_coords; i++ )
       design[i] = 0;
 
-    if ( blend->avar_segment )
+    if ( blend->avar_table && blend->avar_table->avar_segment )
     {
-      GX_AVarSegment  av = blend->avar_segment;
+      GX_AVarSegment  av = blend->avar_table->avar_segment;
 
 
       FT_TRACE5(( "design coordinates"
@@ -4390,11 +4492,19 @@
       FT_FREE( blend->normalized_stylecoords );
       FT_FREE( blend->mmvar );
 
-      if ( blend->avar_segment )
+      if ( blend->avar_table )
       {
         for ( i = 0; i < num_axes; i++ )
-          FT_FREE( blend->avar_segment[i].correspondence );
-        FT_FREE( blend->avar_segment );
+          FT_FREE( blend->avar_table->avar_segment[i].correspondence );
+        FT_FREE( blend->avar_table->avar_segment );
+
+        tt_var_done_item_variation_store( face,
+                                          &blend->avar_table->itemStore );
+
+        tt_var_done_delta_set_index_map( face,
+                                         &blend->avar_table->axisMap );
+
+        FT_FREE( blend->avar_table );
       }
 
       if ( blend->hvar_table )
