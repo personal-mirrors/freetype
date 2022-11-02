@@ -527,7 +527,7 @@
     if ( !slot->library )
       return FT_THROW( Invalid_Library_Handle );
 
-    if ( !bitmap || !bitmap->buffer )
+    if ( !bitmap || !bitmap->buffer || slant > 1 || slant < 0 )
       return FT_THROW( Invalid_Argument );
 
     if ( bitmap->pixel_mode != FT_PIXEL_MODE_MONO )
