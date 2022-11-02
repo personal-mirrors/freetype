@@ -63,11 +63,20 @@
     if ( !slot )
       return;
 
-    outline = &slot->outline;
+    /* now can oblique bitmap glyphs */
+    if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
+    {
+      FT_Bitmap_Slant( slot, &(slot->bitmap), slant );
+      return;
+    }
 
     /* only oblique outline glyphs */
     if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
+    {
       return;
+    }
+
+    outline = &slot->outline;
 
     /* we don't touch the advance width */
 
