@@ -46,7 +46,15 @@
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot )
   {
-    FT_GlyphSlot_Slant( slot, 0x0366A );
+    FT_Matrix    transform;
+
+
+    transform.xx = 0x10000L;
+    transform.yx = 0x00000L;
+    transform.xy = 0x0366A;
+    transform.yy = 0x10000L;
+
+    FT_GlyphSlot_Slant( slot, &transform );
   }
 
 
@@ -54,9 +62,8 @@
 
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Slant( FT_GlyphSlot  slot,
-                      FT_Fixed      slant )
+                      FT_Matrix*    transform )
   {
-    FT_Matrix    transform;
     FT_Outline*  outline;
 
 
@@ -71,14 +78,8 @@
 
     /* we don't touch the advance width */
 
-    /* For italic, simply apply a shear transform */
-    transform.xx = 0x10000L;
-    transform.yx = 0x00000L;
 
-    transform.xy = slant;
-    transform.yy = 0x10000L;
-
-    FT_Outline_Transform( outline, &transform );
+    FT_Outline_Transform( outline, transform );
   }
 
 
