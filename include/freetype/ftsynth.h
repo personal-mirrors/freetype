@@ -72,12 +72,23 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );
 
-  /* Slant an outline glyph by a given sine of an angle and direction.     */
-  /* t2b: 0, slant left to right; 1, slant top to bottom                   */
+  /* Slant an outline glyph by a transform matrix.                         */
+  /* the transform can support LeftToRight and TopToBottom.                */
+  /* If slant 0x599A(about 0.35), the maxtrix shoud be:                    */
+  /* LeftTo Right:                                                         */
+  /*    transform.xx = 0x10000L;                                           */
+  /*    transform.yx = 0x00000L;                                           */
+  /*    transform.xy = slant;                                              */
+  /*    transform.yy = 0x10000L;                                           */
+  /*  Top To Bottom:                                                       */
+  /*    transform.xx = 0x10000L;                                           */
+  /*    transform.yx = -slant;                                             */
+  /*    transform.xy = 0x00000L;                                           */
+  /*    transform.yy = 0x10000L;                                           */
+
   FT_EXPORT( void )
   FT_GlyphSlot_Slant( FT_GlyphSlot  slot,
-                      FT_Fixed      slant,
-                      FT_Bool       t2b );
+                      FT_Matrix*    transform );
 
   /* */
 
