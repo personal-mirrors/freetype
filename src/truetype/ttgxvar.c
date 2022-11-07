@@ -388,7 +388,11 @@
     version   = FT_GET_LONG();
     axisCount = FT_GET_LONG();
 
-    if ( version != 0x00010000L && version != 0x00020000L )
+    if ( version != 0x00010000L
+#ifdef TT_CONFIG_AVAR_FORMAT_2
+         && version != 0x00020000L
+#endif
+       )
     {
       FT_TRACE2(( "bad table version\n" ));
       goto Exit;
@@ -445,6 +449,7 @@
       FT_TRACE5(( "\n" ));
     }
 
+#ifdef TT_CONFIG_AVAR_FORMAT_2
     if ( version < 0x00020000L )
       goto Exit;
 
@@ -472,6 +477,7 @@
       if ( error )
         goto Exit;
     }
+#endif
 
 
   Exit:
