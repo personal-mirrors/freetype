@@ -741,6 +741,15 @@ FT_BEGIN_HEADER
 
   /**************************************************************************
    *
+   * Define `TT_CONFIG_OPTION_AVAR2` if you want to include support
+   * for the axis variations table version 2 extension, in short avar2.
+   * https://github.com/harfbuzz/boring-expansion-spec/blob/main/avar2.md
+   */
+/* #define TT_CONFIG_AVAR_FORMAT_2 */
+
+
+  /**************************************************************************
+   *
    * Define `TT_CONFIG_OPTION_BDF` if you want to include support for an
    * embedded 'BDF~' table within SFNT-based bitmap formats.
    */
