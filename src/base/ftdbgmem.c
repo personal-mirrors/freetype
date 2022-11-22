@@ -874,7 +874,7 @@
   }
 
 
-  static int
+  static FT_COMPARE_DEF( int )
   ft_mem_source_compare( const void*  p1,
                          const void*  p2 )
   {
