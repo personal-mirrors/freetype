@@ -449,9 +449,9 @@ FT_BEGIN_HEADER
 
 #pragma aux FT_MSB_i386 =     \
   "bsr eax, eax"              \
-  parm [eax] nomemory         \
-  value [eax]                 \
-  modify exact [eax] nomemory;
+  __parm [__eax] __nomemory   \
+  __value [__eax]             \
+  __modify __exact [__eax] __nomemory;
 
 #define FT_MSB( x )  FT_MSB_i386( x )
 
