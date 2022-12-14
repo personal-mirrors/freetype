@@ -53,8 +53,10 @@ typedef unsigned long  ulg;
 #  endif
 #endif
 
+#ifndef Z_FREETYPE
 extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
+#endif  /* !Z_FREETYPE */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
 
@@ -236,7 +238,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #    define zmemzero(dest, len) ft_memset(dest, 0, len)
 #  endif
 #else
-   void ZLIB_INTERNAL zmemcpy OF((Bytef* dest, const Bytef* source, uInt len));
+   static void ZLIB_INTERNAL zmemcpy OF((Bytef* dest, const Bytef* source, uInt len));
    int ZLIB_INTERNAL zmemcmp OF((const Bytef* s1, const Bytef* s2, uInt len));
    void ZLIB_INTERNAL zmemzero OF((Bytef* dest, uInt len));
 #endif
