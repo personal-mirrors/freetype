@@ -322,6 +322,10 @@
     return error;
   }
 
+  /* The following three functions are a more or less verbatim
+   * copy of corresponding HarfBuzz code from hb-ft.cc
+   */
+
   static hb_blob_t *
   _hb_ft_reference_table (hb_face_t *face, hb_tag_t tag, void *user_data)
   {
