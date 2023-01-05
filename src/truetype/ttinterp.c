@@ -7832,8 +7832,11 @@
       exc->func_move_cvt  = Move_CVT;
     }
 
-    exc->origCvt     = exc->cvt;
-    exc->origStorage = exc->storage;
+    if(!exc->processCompositeGlyph)
+      {
+      exc->origCvt     = exc->cvt;
+      exc->origStorage = exc->storage;
+      }
     exc->iniRange    = exc->curRange;
 
     Compute_Funcs( exc );
@@ -8593,9 +8596,11 @@
     FT_TRACE4(( "  %ld instruction%s executed\n",
                 ins_counter,
                 ins_counter == 1 ? "" : "s" ));
-
-    exc->cvt     = exc->origCvt;
-    exc->storage = exc->origStorage;
+    if(!exc->processCompositeGlyph)
+    {
+      exc->cvt     = exc->origCvt;
+      exc->storage = exc->origStorage;
+    }
 
     return FT_Err_Ok;
 
@@ -8605,9 +8610,11 @@
   LErrorLabel_:
     if ( exc->error && !exc->instruction_trap )
       FT_TRACE1(( "  The interpreter returned error 0x%x\n", exc->error ));
-
-    exc->cvt     = exc->origCvt;
-    exc->storage = exc->origStorage;
+    if(!exc->processCompositeGlyph)
+    {
+      exc->cvt     = exc->origCvt;
+      exc->storage = exc->origStorage;
+    }
 
     return exc->error;
   }

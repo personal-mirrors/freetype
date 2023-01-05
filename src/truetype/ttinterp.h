@@ -159,6 +159,7 @@ FT_BEGIN_HEADER
     FT_Error           error;      /* last execution error */
 
     FT_Long            top;        /* @ top of exec. stack */
+    FT_Bool processCompositeGlyph; /* process composite glyph */
 
     FT_Long            stackSize;  /* ! size of exec. stack */
     FT_Long*           stack;      /* ! current exec. stack */
