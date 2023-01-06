@@ -1994,6 +1994,13 @@
       /*********************************************************************/
 
       {
+      if(recurse_count==0 && loader->exec)
+      {
+        loader->exec->processCompositeGlyph=1;
+        loader->exec->origCvt     = loader->exec->cvt;
+        loader->exec->origStorage = loader->exec->storage;
+      }
+
         FT_UInt      n, num_base_points;
         FT_SubGlyph  subglyph       = NULL;
 
@@ -2106,6 +2113,12 @@
     /***********************************************************************/
 
   Exit:
+   if(recurse_count==0 && loader->exec && loader->exec->processCompositeGlyph==1)
+   {
+     loader->exec->processCompositeGlyph=0;
+     loader->exec->cvt     = loader->exec->origCvt;
+     loader->exec->storage = loader->exec->origStorage;
+   }
 
     if ( opened_frame )
       face->forget_glyph_frame( loader );
