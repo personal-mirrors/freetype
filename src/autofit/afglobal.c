@@ -321,7 +321,6 @@
     return error;
   }
 
-
   FT_LOCAL_DEF( FT_Error )
   af_face_globals_new( FT_Face          face,
                        AF_FaceGlobals  *aglobals,
