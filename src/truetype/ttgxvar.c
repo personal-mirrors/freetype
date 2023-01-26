@@ -1008,6 +1008,8 @@
     FT_Fixed*         scalars;
     FT_ItemVarDelta   returnValue;
 
+    if ( ! face->blend->normalizedcoords )
+      return 0;
 
     /* OpenType 1.8.4+: No variation data for this item
      *  as indices have special value 0xFFFF. */
