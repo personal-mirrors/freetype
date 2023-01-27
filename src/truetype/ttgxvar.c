@@ -1008,6 +1008,8 @@
     FT_Fixed*         scalars;
     FT_ItemVarDelta   returnValue;
 
+    if ( ! face->blend->normalizedcoords )
+      return 0;
 
     if ( !face->blend->normalizedcoords )
       return 0;
