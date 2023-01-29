@@ -57,6 +57,16 @@
   FT_GlyphSlot_Slant( FT_GlyphSlot  slot,
                       FT_Fixed      slant )
   {
+    FT_GlyphSlot_Slant_Direction( slot, slant, 0 );
+  }
+
+  /* documentation is in ftsynth.h */
+
+  FT_EXPORT_DEF( void )
+  FT_GlyphSlot_Slant_Direction( FT_GlyphSlot  slot,
+                                FT_Fixed      slant,
+                                FT_Bool       t2b )
+  {
     FT_Matrix    transform;
     FT_Outline*  outline;
 
@@ -64,19 +74,26 @@
     if ( !slot )
       return;
 
-    outline = &slot->outline;
-
     /* only oblique outline glyphs */
     if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
       return;
 
     /* we don't touch the advance width */
 
+    outline = &slot->outline;
+
     /* For italic, simply apply a shear transform */
     transform.xx = 0x10000L;
-    transform.yx = 0x00000L;
-
-    transform.xy = slant;
+    if (t2b)
+    {
+        transform.yx = -slant;
+        transform.xy = 0x00000L;
+    }
+    else
+    {
+        transform.yx = 0x00000L;
+        transform.xy = slant;
+    }
     transform.yy = 0x10000L;
 
     FT_Outline_Transform( outline, &transform );
