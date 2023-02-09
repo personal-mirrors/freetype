@@ -871,7 +871,7 @@
       cbox.yMax = edge.control_b.y;
 
       is_set = 1;
-      /* fall through */
+      FALL_THROUGH;
 
     case SDF_EDGE_CONIC:
       if ( is_set )
@@ -899,7 +899,7 @@
 
         is_set = 1;
       }
-      /* fall through */
+      FALL_THROUGH;
 
     case SDF_EDGE_LINE:
       if ( is_set )
@@ -3258,7 +3258,7 @@
     /* and also determine the signs properly.             */
     SDF_Signed_Distance*  dists = NULL;
 
-    const FT_16D16  fixed_spread = FT_INT_16D16( spread );
+    const FT_16D16  fixed_spread = (FT_16D16)FT_INT_16D16( spread );
 
 
     if ( !shape || !bitmap )

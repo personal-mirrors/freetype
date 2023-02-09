@@ -72,17 +72,12 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );
 
-  /* Slant an outline glyph by a given sine of an angle.                   */
+  /* Slant an outline glyph by a given sine of an angle.  You can apply    */
+  /* slant along either x- or y-axis.                                      */
   FT_EXPORT( void )
   FT_GlyphSlot_Slant( FT_GlyphSlot  slot,
-                      FT_Fixed      slant );
-
-  /* Slant an outline glyph by a given sine of an angle and direction.     */
-  /* t2b: 0, slant left to right; 1, slant top to bottom                   */
-  FT_EXPORT( void )
-  FT_GlyphSlot_Slant_Direction( FT_GlyphSlot  slot,
-                                FT_Fixed      slant,
-                                FT_Bool       t2b );
+                      FT_Fixed      xslant,
+                      FT_Fixed      yslant );
 
   /* */
 
