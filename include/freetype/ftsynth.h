@@ -68,6 +68,13 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot );
 
+  /* Use this function, you can change lines of a glyph thicker or bolder, */
+  /* x and y can have different value                                      */
+  FT_EXPORT( void )
+  FT_GlyphSlot_WeightXY( FT_GlyphSlot  slot,
+                         FT_Fixed      xweight,
+                         FT_Fixed      yweight );
+
   /* Slant an outline glyph to the right by about 12 degrees.              */
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );

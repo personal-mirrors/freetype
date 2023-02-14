@@ -32,6 +32,11 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  synth
 
+  /**************************************************************************
+   *
+   * The macro FT_WEIGHT_BOLD is used when embolden a glyph.
+   */
+#define FT_WEIGHT_BOLD   0x10000
 
   /*************************************************************************/
   /*************************************************************************/
@@ -98,13 +103,24 @@
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot )
   {
+    FT_GlyphSlot_WeightXY( slot, FT_WEIGHT_BOLD, FT_WEIGHT_BOLD );
+  }
+
+  /* documentation is in ftsynth.h */
+
+  FT_EXPORT_DEF( void )
+  FT_GlyphSlot_WeightXY( FT_GlyphSlot  slot,
+                         FT_Fixed      xweight,
+                         FT_Fixed      yweight )
+  {
     FT_Library  library;
     FT_Face     face;
     FT_Error    error;
     FT_Pos      xstr, ystr;
+    FT_Pos      weight;
 
 
-    if ( !slot )
+    if ( !slot || xweight == 0 && yweight == 0)
       return;
 
     library = slot->library;
@@ -115,9 +131,10 @@
       return;
 
     /* some reasonable strength */
-    xstr = FT_MulFix( face->units_per_EM,
-                      face->size->metrics.y_scale ) / 24;
-    ystr = xstr;
+    weight = FT_MulFix( face->units_per_EM,
+                        face->size->metrics.y_scale ) / 24;
+    xstr = FT_MulFix( weight, xweight );
+    ystr = FT_MulFix( weight, yweight );
 
     if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
       FT_Outline_EmboldenXY( &slot->outline, xstr, ystr );
