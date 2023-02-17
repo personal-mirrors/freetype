@@ -550,7 +550,8 @@
     if ( !outline )
       return;
 
-    first = 0;
+    /* skip reversing the first point in each contour */
+    first = 1;
 
     for ( n = 0; n < outline->n_contours; n++ )
     {
@@ -596,7 +597,9 @@
         }
       }
 
-      first = last + 1;
+      /* `last + 1` is the first point in the next contour, */
+      /* but we skip reversing the first point in each contour */
+      first = last + 2;
     }
 
     outline->flags ^= FT_OUTLINE_REVERSE_FILL;
