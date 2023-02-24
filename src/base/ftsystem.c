@@ -219,7 +219,7 @@
     FT_FILE*  file;
 
 
-    if ( !count && offset > stream->size )
+    if ( offset > stream->size && !count )
       return 1;
 
     file = STREAM_FILE( stream );
