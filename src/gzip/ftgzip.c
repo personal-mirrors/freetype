@@ -70,7 +70,7 @@
   /* so that configuration with `FT_CONFIG_OPTION_SYSTEM_ZLIB' might   */
   /* include the wrong `zconf.h' file, leading to errors.              */
 
-#if defined( __GNUC__ ) ||  defined( __clang__ )
+#if defined( _MSC_VER ) || defined( __GNUC__ ) ||  defined( __clang__ )
 #define ZEXPORT
 #define ZEXTERN      static
 #endif
