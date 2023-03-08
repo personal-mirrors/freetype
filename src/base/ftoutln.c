@@ -557,6 +557,10 @@
       first = last + 2;
       last  = outline->contours[n];
 
+      /* keep the first contour point as is and swap points around it */
+      /* to guarantee that the cubic arches stay valid after reverse  */
+      first++;
+
       /* reverse point table */
       {
         FT_Vector*  p = outline->points + first;

@@ -68,6 +68,17 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot );
 
+  /* This function can change lines of a glyph thinner or thicker.         */
+  /* In function calculate a unit value, multiple with  xdelta or ydelta,  */
+  /* then get xstrength or ystrength.                                      */
+  /* xdelta and ydelta can be plus or minus                                */
+  /* If you want make the effect more close to windows, xdelta and ydelta  */
+  /* should be 1/3 as normal.                                              */
+  FT_EXPORT( void )
+  FT_GlyphSlot_WeightXY( FT_GlyphSlot  slot,
+                         FT_Fixed      xdelta,
+                         FT_Fixed      ydelta );
+
   /* Slant an outline glyph to the right by about 12 degrees.              */
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );
