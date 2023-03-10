@@ -67,6 +67,12 @@
 
     outline = &slot->outline;
 
+    if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
+    {
+      FT_Bitmap_Slant(slot->library, &slot->bitmap, slot->bitmap_top, slot->bitmap_left, xslant, yslant);
+      return;
+    }
+
     /* only oblique outline glyphs */
     if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
       return;
