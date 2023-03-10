@@ -32,6 +32,7 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  synth
 
+
   /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
@@ -66,6 +67,12 @@
 
     outline = &slot->outline;
 
+    if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
+    {
+      FT_Bitmap_Slant(slot->library, &slot->bitmap, slot->bitmap_top, slot->bitmap_left, xslant, yslant);
+      return;
+    }
+
     /* only oblique outline glyphs */
     if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
       return;
@@ -97,24 +104,13 @@
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot )
   {
-    FT_GlyphSlot_WeightXY( slot, 0x10000, 0x10000 );
-  }
-
-  /* documentation is in ftsynth.h */
-
-  FT_EXPORT_DEF( void )
-  FT_GlyphSlot_WeightXY( FT_GlyphSlot  slot,
-                         FT_Fixed      xdelta,
-                         FT_Fixed      ydelta )
-  {
     FT_Library  library;
     FT_Face     face;
     FT_Error    error;
     FT_Pos      xstr, ystr;
-    FT_Pos      weight;
 
 
-    if ( !slot || xdelta == 0 && ydelta == 0)
+    if ( !slot )
       return;
 
     library = slot->library;
@@ -125,10 +121,9 @@
       return;
 
     /* some reasonable strength */
-    weight = FT_MulFix( face->units_per_EM,
-                        face->size->metrics.y_scale ) / 24;
-    xstr = FT_MulFix( weight, xdelta );
-    ystr = FT_MulFix( weight, ydelta );
+    xstr = FT_MulFix( face->units_per_EM,
+                      face->size->metrics.y_scale ) / 24;
+    ystr = xstr;
 
     if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
       FT_Outline_EmboldenXY( &slot->outline, xstr, ystr );

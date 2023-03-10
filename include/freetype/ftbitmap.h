@@ -163,6 +163,47 @@ FT_BEGIN_HEADER
   /**************************************************************************
    *
    * @function:
+   *   FT_Bitmap_Slant
+   *
+   * @description:
+   *   Slant a bitmap.
+   *
+   * @input:
+   *   library ::
+   *     A handle to a library object.
+   *
+   * @inout:
+   *   bitmap ::
+   *     A handle to the target bitmap.
+   *
+   * @input:
+   *   bitmap_top  ::
+   *   bitmap_left ::
+   *     Slot position.
+   * 
+   * @input:
+   *   xslant ::
+   *   yslant ::
+   *     How mush the glyph slant.
+   *
+   * @return:
+   *   FreeType error code.  0~means success.
+   *
+   * @note:
+   *   Only @FT_PIXEL_MODE_MONO be processed.
+   */
+  FT_EXPORT( FT_Error )
+  FT_Bitmap_Slant( FT_Library  library,
+                   FT_Bitmap*  bitmap,
+                   FT_Int      bitmap_top,
+                   FT_Int      bitmap_left,
+                   FT_Fixed    xslant,
+                   FT_Fixed    yslant );
+
+
+  /**************************************************************************
+   *
+   * @function:
    *   FT_Bitmap_Convert
    *
    * @description:
