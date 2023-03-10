@@ -69,8 +69,8 @@
     FT_Module         module;
 
 
-    module = FT_Get_Module( size->root.face->driver->root.library,
-                            "pshinter" );
+    module = FT_Get_Module( font->library, "pshinter" );
+
     return ( module && pshinter && pshinter->get_globals_funcs )
            ? pshinter->get_globals_funcs( module )
            : 0;
@@ -182,8 +182,7 @@
       goto Exit;
 
     cff_make_private_dict( &font->top_font, &priv );
-    error = funcs->create( cffsize->face->memory, &priv,
-                             &internal->topfont );
+    error = funcs->create( memory, &priv, &internal->topfont );
     if ( error )
       goto Exit;
 
@@ -193,8 +192,7 @@
 
 
       cff_make_private_dict( sub, &priv );
-      error = funcs->create( cffsize->face->memory, &priv,
-                               &internal->subfonts[i - 1] );
+      error = funcs->create( memory, &priv, &internal->subfonts[i - 1] );
       if ( error )
         goto Exit;
     }
@@ -381,8 +379,7 @@
       FT_Module  module;
 
 
-      module = FT_Get_Module( slot->face->driver->root.library,
-                              "pshinter" );
+      module = FT_Get_Module( slot->library, "pshinter" );
       if ( module )
       {
         T2_Hints_Funcs  funcs;
