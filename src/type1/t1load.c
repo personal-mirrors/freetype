@@ -1377,6 +1377,12 @@
 
       /* there is only one whitespace char after the */
       /* `RD' or `-|' token                          */
+      if ( parser->root.cursor >= limit )
+      {
+        FT_ERROR(( "read_binary_data: truncated size field\n" ));
+        parser->root.error = FT_THROW( Invalid_File_Format );
+        return 0;
+      }
       *base = parser->root.cursor + 1;
 
       if ( s >= 0 && s < limit - *base )
