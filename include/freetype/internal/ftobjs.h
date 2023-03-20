@@ -310,6 +310,14 @@ FT_BEGIN_HEADER
    *     advance, or if the face isn't scalable, this should be set to 0.
    *     Only relevant for scalable formats.
    *
+   *   xstrength ::
+   *     How strong the glyph is emboldened to wider.
+   *     Expressed in 26.6 pixel format.
+   *
+   *   ystrength ::
+   *     How strong the glyph is emboldened to higher.
+   *     Expressed in 26.6 pixel format.
+   *
    *   transform_matrix ::
    *     A 2x2 matrix of 16.16 coefficients used to transform glyph outlines
    *     after they are loaded from the font.  Only used by the convenience
@@ -358,6 +366,8 @@ FT_BEGIN_HEADER
   {
     FT_Matrix  transform_matrix;
     FT_Vector  transform_delta;
+    FT_Pos     xstrength;
+    FT_Pos     ystrength;
     FT_Int     transform_flags;
 
     FT_ServiceCacheRec  services;

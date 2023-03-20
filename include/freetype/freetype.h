@@ -3449,6 +3449,62 @@ FT_BEGIN_HEADER
 
   /**************************************************************************
    *
+   * @function:
+   *   FT_Set_EmboldenXY
+   *
+   * @description:
+   *   Set the Embolden. that is applied to glyph images when they are
+   *   loaded into a glyph slot through @FT_Load_Glyph.
+   *
+   * @inout:
+   *   face ::
+   *     A handle to the source face object.
+   *
+   * @input:
+   *   xstrength ::
+   *     How strong the glyph is emboldened to wider.
+   *     Expressed in 26.6 pixel format.
+   *   ystrength ::
+   *     How strong the glyph is emboldened to higher.
+   *     Expressed in 26.6 pixel format.
+   *
+   */
+  FT_EXPORT( void )
+  FT_Set_EmboldenXY( FT_Face  face,
+                    FT_Pos    xstrength,
+                    FT_Pos    ystrength );
+
+
+  /**************************************************************************
+   *
+   * @function:
+   *   FT_Get_Transform
+   *
+   * @description:
+   *   Return the transformation that is applied to glyph images when they
+   *   are loaded into a glyph slot through @FT_Load_Glyph.  See
+   *   @FT_Set_Transform for more details.
+   *
+   * @input:
+   *   face ::
+   *     A handle to the source face object.
+   *
+   * @output:
+   *   xstrength ::
+   *     A pointer to the glyph is emboldened to wider.
+   *
+   *   ystrength ::
+   *     A pointer to the glyph is emboldened to higher.
+   *
+   */
+  FT_EXPORT( void )
+  FT_Get_EmboldenXY( FT_Face  face,
+                    FT_Pos*   xstrength,
+                    FT_Pos*   ystrength );
+
+
+  /**************************************************************************
+   *
    * @enum:
    *   FT_Render_Mode
    *

@@ -777,7 +777,7 @@
 
     internal = face->internal;
 
-    internal->transform_flags = 0;
+    internal->transform_flags &= ~3;
 
     if ( !matrix )
     {
@@ -833,6 +833,56 @@
 
     if ( delta )
       *delta = internal->transform_delta;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( void )
+  FT_Set_EmboldenXY( FT_Face  face,
+                    FT_Pos    xstrength,
+                    FT_Pos    ystrength )
+  {
+    FT_Face_Internal  internal;
+
+
+    if ( !face )
+      return;
+
+    internal = face->internal;
+
+    //internal->transform_flags = 0;
+
+    internal->xstrength = xstrength;
+    internal->ystrength = ystrength;
+
+    /* set transform_flags bit flag 2 if `delta' isn't the null vector */
+    if ( internal->xstrength && internal->ystrength )
+      internal->transform_flags |= 4;
+    else
+      internal->transform_flags &= ~4;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( void )
+  FT_Get_EmboldenXY( FT_Face  face,
+                    FT_Pos*   xstrength,
+                    FT_Pos*   ystrength )
+  {
+    FT_Face_Internal  internal;
+
+    if ( !face )
+      return;
+
+    internal = face->internal;
+
+    if ( xstrength )
+      *xstrength = internal->xstrength;
+
+    if ( ystrength )
+      *ystrength = internal->ystrength;
   }
 
 
@@ -1142,6 +1192,9 @@
                                   internal->transform_delta.x,
                                   internal->transform_delta.y );
         }
+
+        if ( internal->transform_flags & 4 )
+          FT_Outline_EmboldenXY(&face->glyph->outline, internal->xstrength, internal->ystrength);
 
         /* transform advance */
         FT_Vector_Transform( &slot->advance, &internal->transform_matrix );
