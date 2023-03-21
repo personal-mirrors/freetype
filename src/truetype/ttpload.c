@@ -100,69 +100,15 @@
 
     shift = face->header.Index_To_Loc_Format != 0 ? 2 : 1;
 
-    if ( table_len > 0x10000UL << shift )
-    {
-      FT_TRACE2(( "table too large\n" ));
-      table_len = 0x10000UL << shift;
-    }
-
     face->num_locations = table_len >> shift;
 
     if ( face->num_locations != (FT_ULong)face->root.num_glyphs + 1 )
     {
-      FT_TRACE2(( "glyph count mismatch!  loca: %ld, maxp: %ld\n",
-                  face->num_locations - 1, face->root.num_glyphs ));
+      face->root.num_glyphs = face->num_locations
+				? (FT_Long)face->num_locations - 1 : 0;
 
-      /* we only handle the case where `maxp' gives a larger value */
-      if ( face->num_locations < (FT_ULong)face->root.num_glyphs + 1 )
-      {
-        FT_ULong  new_loca_len =
-                    ( (FT_ULong)face->root.num_glyphs + 1 ) << shift;
-
-        TT_Table  entry = face->dir_tables;
-        TT_Table  limit = entry + face->num_tables;
-
-        FT_Long  pos   = (FT_Long)FT_STREAM_POS();
-        FT_Long  dist  = 0x7FFFFFFFL;
-        FT_Bool  found = 0;
-
-
-        /* compute the distance to next table in font file */
-        for ( ; entry < limit; entry++ )
-        {
-          FT_Long  diff = (FT_Long)entry->Offset - pos;
-
-
-          if ( diff > 0 && diff < dist )
-          {
-            dist  = diff;
-            found = 1;
-          }
-        }
-
-        if ( !found )
-        {
-          /* `loca' is the last table */
-          dist = (FT_Long)stream->size - pos;
-        }
-
-        if ( new_loca_len <= (FT_ULong)dist )
-        {
-          face->num_locations = (FT_ULong)face->root.num_glyphs + 1;
-          table_len           = new_loca_len;
-
-          FT_TRACE2(( "adjusting num_locations to %ld\n",
-                      face->num_locations ));
-        }
-        else
-        {
-          face->root.num_glyphs = face->num_locations
-                                    ? (FT_Long)face->num_locations - 1 : 0;
-
-          FT_TRACE2(( "adjusting num_glyphs to %ld\n",
-                      face->root.num_glyphs ));
-        }
-      }
+      FT_TRACE2(( "adjusting num_glyphs to %ld\n",
+		  face->root.num_glyphs ));
     }
 
     /*

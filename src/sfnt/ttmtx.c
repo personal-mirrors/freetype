@@ -236,6 +236,7 @@
     TT_HoriHeader*  header;
     FT_ULong        table_pos, table_size, table_end;
     FT_UShort       k;
+    FT_UShort       maxp_num_glyphs;
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
     FT_Service_MetricsVariations  var =
@@ -262,6 +263,7 @@
     table_end = table_pos + table_size;
 
     k = header->number_Of_HMetrics;
+    maxp_num_glyphs = face->max_profile.numGlyphs;
 
     if ( k > 0 )
     {
@@ -276,7 +278,7 @@
              FT_READ_SHORT( *abearing )  )
           goto NoData;
       }
-      else
+      else if ( gindex < (FT_UInt)maxp_num_glyphs )
       {
         table_pos += 4 * ( k - 1 );
         if ( table_pos + 2 > table_end )
@@ -296,6 +298,21 @@
           else
             (void)FT_READ_SHORT( *abearing );
         }
+      }
+      else
+      {
+        table_pos += 4 * k;
+        table_pos += 2 * (maxp_num_glyphs - k);
+        table_pos += 2 * (gindex - maxp_num_glyphs);
+
+        if ( table_pos + 2 > table_end )
+          goto NoData;
+
+        if ( FT_STREAM_SEEK( table_pos ) ||
+             FT_READ_USHORT( *aadvance ) )
+          goto NoData;
+
+        *abearing = 0; /* XXX */
       }
     }
     else
