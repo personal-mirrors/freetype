@@ -1244,6 +1244,8 @@
 
 
     p = cmap->data + 6;
+    if ( !p )
+      return 0;
     num_segs2 = FT_PAD_FLOOR( TT_PEEK_USHORT( p ), 2 );
 
     if ( !num_segs2 )
